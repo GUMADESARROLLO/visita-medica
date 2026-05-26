@@ -1,0 +1,160 @@
+---
+import { verifyToken } from '../lib/auth/index';
+
+const token = Astro.cookies.get('token')?.value;
+const user = token ? await verifyToken(token) : null;
+const currentPath = Astro.url.pathname;
+
+function isActive(path: string): boolean {
+  if (path === '/dashboard') return currentPath.startsWith('/dashboard');
+  return currentPath.startsWith(path);
+}
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+  adminOnly?: boolean;
+}
+
+const navItems: NavItem[] = [
+  { label: 'Dashboard', href: '/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1' },
+  { label: 'Medios', href: '/medios', icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z' },
+  { label: 'Especialidades', href: '/especialidades', icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.39-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z' },
+  { label: 'Productos', href: '/productos', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+  { label: 'Médicos', href: '/medicos', icon: 'M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { label: 'Visitadores', href: '/visitadores', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', adminOnly: true },
+  { label: 'Solicitudes', href: '/solicitudes', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+  { label: 'Reportes', href: '/reportes', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+];
+
+const filteredNav = user?.rol === 'Administrador'
+  ? navItems
+  : navItems.filter(i => !i.adminOnly);
+---
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <title>VisitaMedica - Sistema Administrativo</title>
+</head>
+<body class="min-h-screen bg-[var(--color-surface-alt)]" x-data="{ sidebarOpen: true, darkMode: false, profileOpen: false }" x-init="darkMode = localStorage.getItem('darkMode') === 'true'; if(darkMode) document.documentElement.classList.add('dark')">
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2" aria-live="polite"></div>
+
+  <!-- Sidebar -->
+  <aside
+    class="fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out bg-[var(--color-surface)] border-r border-[var(--color-border)]"
+    :class="sidebarOpen ? 'w-64' : 'w-[70px]'"
+  >
+    <div class="flex items-center h-16 px-4 border-b border-[var(--color-border)]">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <div class="flex-shrink-0 w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        </div>
+        <span class="text-lg font-semibold whitespace-nowrap" :class="sidebarOpen ? '' : 'hidden'">VisitaMedica</span>
+      </div>
+    </div>
+
+    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
+      {filteredNav.map((item) => (
+        <a
+          href={item.href}
+          class={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 group ${
+            isActive(item.href)
+              ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+              : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-alt)] hover:text-[var(--color-text)]'
+          }`}
+        >
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d={item.icon}/>
+          </svg>
+          <span :class="sidebarOpen ? '' : 'hidden'">{item.label}</span>
+        </a>
+      ))}
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="transition-all duration-300" :class="sidebarOpen ? 'ml-64' : 'ml-[70px]'">
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-30 h-16 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex items-center justify-between px-6">
+      <button
+        @click="sidebarOpen = !sidebarOpen"
+        class="p-2 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors"
+        aria-label="Toggle sidebar"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sidebarOpen ? 'M11 19l-7-7 7-7m8 14l-7-7 7-7' : 'M13 5l7 7-7 7M5 5l7 7-7 7'" />
+        </svg>
+      </button>
+
+      <div class="flex items-center gap-3">
+        <button
+          @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode); document.documentElement.classList.toggle('dark', darkMode)"
+          class="p-2 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors"
+          aria-label="Toggle dark mode"
+        >
+          <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+          <svg x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        </button>
+
+        {user ? (
+          <div class="relative" @click.away="profileOpen = false">
+            <button @click="profileOpen = !profileOpen" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors">
+              <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+              <span class="text-sm font-medium hidden sm:block">{user.username}</span>
+              <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div x-show="profileOpen" x-transition class="absolute right-0 mt-2 w-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg py-1 z-50">
+              <div class="px-4 py-2 border-b border-[var(--color-border)]">
+                <p class="text-sm font-medium">{user.username}</p>
+                <p class="text-xs text-[var(--color-text-muted)]">{user.rol}</p>
+              </div>
+              <form method="POST" action="/api/auth/logout">
+                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-danger hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                  Cerrar sesión
+                </button>
+              </form>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="p-6">
+      <slot />
+    </main>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script is:inline>
+    (function() {
+      var showToast = function(message, type) {
+        type = type || 'success';
+        var container = document.getElementById('toast-container');
+        if (!container) return;
+        var toast = document.createElement('div');
+        var bg = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+        toast.className = 'toast-enter px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 text-white ' + bg;
+        toast.innerHTML = '<span>' + message + '</span>';
+        container.appendChild(toast);
+        setTimeout(function() { toast.classList.remove('toast-enter'); toast.classList.add('toast-exit'); setTimeout(function() { toast.remove(); }, 300); }, 3000);
+      };
+      window.showToast = showToast;
+    })();
+  </script>
+</body>
+</html>

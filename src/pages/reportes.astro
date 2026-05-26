@@ -1,0 +1,312 @@
+---
+import AdminLayout from '../layouts/AdminLayout.astro';
+---
+
+<AdminLayout>
+  <div class="space-y-6" x-data="reportesPage()" x-init="init()">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">Reportes</h1>
+        <p class="text-[var(--color-text-muted)] text-sm mt-0.5">Reporte de visitas médicas</p>
+      </div>
+    </div>
+
+    <!-- Advanced Filter Panel -->
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
+      <h3 class="font-medium mb-4 text-sm text-[var(--color-text-muted)] uppercase tracking-wider">Filtros</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Fecha Inicio</label>
+          <input type="date" x-model="filters.fechaInicio" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Fecha Fin</label>
+          <input type="date" x-model="filters.fechaFin" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Visitador</label>
+          <select x-model="filters.visitadorId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option value="">Todos</option>
+            <template x-for="v in visitadoresList" :key="v.id">
+              <option :value="v.id" x-text="v.nombre"></option>
+            </template>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Médico</label>
+          <select x-model="filters.medicoId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option value="">Todos</option>
+            <template x-for="m in medicosList" :key="m.id">
+              <option :value="m.id" x-text="m.nombre"></option>
+            </template>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Especialidad</label>
+          <select x-model="filters.especialidadId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option value="">Todas</option>
+            <template x-for="e in especialidadesList" :key="e.id">
+              <option :value="e.id" x-text="e.nombre"></option>
+            </template>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Efectiva</label>
+          <select x-model="filters.efectiva" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option value="">Todas</option>
+            <option value="1">Sí</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 mt-4">
+        <button @click="loadPage(1)" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          Aplicar filtros
+        </button>
+        <button @click="exportExcel()" :disabled="exporting" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span x-show="!exporting">Exportar Excel</span>
+          <span x-show="exporting">Exportando...</span>
+        </button>
+        <button @click="clearFilters()" class="px-4 py-2 border border-[var(--color-border)] rounded-lg text-sm hover:bg-[var(--color-surface-alt)] transition-colors">
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+        <p class="text-xs text-[var(--color-text-muted)]">Total Visitas</p>
+        <p class="text-2xl font-bold mt-1" x-text="stats.total">0</p>
+      </div>
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+        <p class="text-xs text-[var(--color-text-muted)]">Efectivas</p>
+        <p class="text-2xl font-bold mt-1 text-green-600" x-text="stats.efectivas">0</p>
+      </div>
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+        <p class="text-xs text-[var(--color-text-muted)]">No Efectivas</p>
+        <p class="text-2xl font-bold mt-1 text-red-600" x-text="stats.noEfectivas">0</p>
+      </div>
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+        <p class="text-xs text-[var(--color-text-muted)]">Efectividad</p>
+        <p class="text-2xl font-bold mt-1 text-primary-600" x-text="stats.efectividad + '%'">0%</p>
+        <div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+          <div class="bg-primary-500 h-1.5 rounded-full transition-all" :style="'width:' + (stats.efectividad || 0) + '%'"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-[var(--color-border)] bg-[var(--color-surface-alt)]">
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Fecha</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Visitador</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Médico</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Especialidad</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Efectiva</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Observación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-if="loading">
+              <tr><td colspan="6" class="text-center py-12 text-[var(--color-text-muted)]">Cargando...</td></tr>
+            </template>
+            <template x-if="!loading && items.length === 0">
+              <tr><td colspan="6" class="text-center py-12 text-[var(--color-text-muted)]">No se encontraron visitas</td></tr>
+            </template>
+            <template x-for="v in items" :key="v.id">
+              <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors">
+                <td class="px-4 py-3 whitespace-nowrap text-xs" x-text="formatDate(v.fecha)"></td>
+                <td class="px-4 py-3" x-text="v.visitador?.nombre || '—'"></td>
+                <td class="px-4 py-3" x-text="v.medico?.nombre || '—'"></td>
+                <td class="px-4 py-3" x-text="v.medico?.especialidad?.nombre || '—'"></td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                    :class="v.efectiva === '1' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                    x-text="v.efectiva === '1' ? 'Sí' : 'No'"></span>
+                </td>
+                <td class="px-4 py-3 max-w-xs">
+                  <span class="text-xs text-[var(--color-text-muted)] line-clamp-2" x-text="v.observacion || '—'"></span>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <template x-if="pagination.totalPages > 1">
+        <div class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)]">
+          <span class="text-sm text-[var(--color-text-muted)]" x-text="`${pagination.total} resultados`"></span>
+          <div class="flex items-center gap-1">
+            <button @click="loadPage(pagination.page - 1)" :disabled="pagination.page <= 1" class="px-3 py-1.5 text-sm rounded-lg hover:bg-[var(--color-surface-alt)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Anterior</button>
+            <template x-for="p in getPageNumbers()" :key="p">
+              <button @click="loadPage(p)" class="w-8 h-8 text-sm rounded-lg transition-colors"
+                :class="p === pagination.page ? 'bg-primary-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+                x-text="p"></button>
+            </template>
+            <button @click="loadPage(pagination.page + 1)" :disabled="!pagination.hasMore" class="px-3 py-1.5 text-sm rounded-lg hover:bg-[var(--color-surface-alt)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Siguiente</button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  function reportesPage() {
+    return {
+      items: [] as any[],
+      loading: false,
+      exporting: false,
+      pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
+      stats: { total: 0, efectivas: 0, noEfectivas: 0, efectividad: 0 },
+      filters: {
+        fechaInicio: '',
+        fechaFin: '',
+        visitadorId: '',
+        medicoId: '',
+        especialidadId: '',
+        efectiva: '',
+      },
+
+      visitadoresList: [] as any[],
+      medicosList: [] as any[],
+      especialidadesList: [] as any[],
+
+      async init() {
+        await Promise.all([
+          this.loadVisitadores(),
+          this.loadMedicos(),
+          this.loadEspecialidades(),
+        ]);
+        await this.loadPage(1);
+      },
+
+      async loadVisitadores() {
+        try {
+          const r = await fetch('/api/visitadores?limit=200');
+          const data = await r.json();
+          this.visitadoresList = data.data || [];
+        } catch (e) { this.visitadoresList = []; }
+      },
+
+      async loadMedicos() {
+        try {
+          const r = await fetch('/api/medicos?limit=200');
+          const data = await r.json();
+          this.medicosList = data.data || [];
+        } catch (e) { this.medicosList = []; }
+      },
+
+      async loadEspecialidades() {
+        try {
+          const r = await fetch('/api/especialidades?limit=200');
+          const data = await r.json();
+          this.especialidadesList = data.data || [];
+        } catch (e) { this.especialidadesList = []; }
+      },
+
+      async loadPage(page: number) {
+        this.loading = true;
+        try {
+          const params = new URLSearchParams();
+          params.set('page', String(page));
+          params.set('limit', String(this.pagination.limit));
+          if (this.filters.fechaInicio) params.set('fechaInicio', this.filters.fechaInicio);
+          if (this.filters.fechaFin) params.set('fechaFin', this.filters.fechaFin);
+          if (this.filters.visitadorId) params.set('visitadorId', this.filters.visitadorId);
+          if (this.filters.medicoId) params.set('medicoId', this.filters.medicoId);
+          if (this.filters.especialidadId) params.set('especialidadId', this.filters.especialidadId);
+          if (this.filters.efectiva) params.set('efectiva', this.filters.efectiva);
+
+          const r = await fetch(`/api/reportes?${params.toString()}`);
+          const data = await r.json();
+          if (r.ok) {
+            this.items = data.data || [];
+            this.pagination = data.pagination || { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false };
+            this.stats = data.stats || { total: 0, efectivas: 0, noEfectivas: 0, efectividad: 0 };
+          }
+        } catch (e) {
+          console.error('Load reportes error:', e);
+        }
+        this.loading = false;
+      },
+
+      async exportExcel() {
+        this.exporting = true;
+        try {
+          const params = new URLSearchParams();
+          if (this.filters.fechaInicio) params.set('fechaInicio', this.filters.fechaInicio);
+          if (this.filters.fechaFin) params.set('fechaFin', this.filters.fechaFin);
+          if (this.filters.visitadorId) params.set('visitadorId', this.filters.visitadorId);
+          if (this.filters.medicoId) params.set('medicoId', this.filters.medicoId);
+          if (this.filters.especialidadId) params.set('especialidadId', this.filters.especialidadId);
+          if (this.filters.efectiva) params.set('efectiva', this.filters.efectiva);
+
+          const r = await fetch(`/api/reportes/excel?${params.toString()}`);
+          if (!r.ok) {
+            const err = await r.json();
+            window.showToast(err.error || 'Error al exportar', 'error');
+            this.exporting = false;
+            return;
+          }
+          const blob = await r.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `reporte-visitas-${new Date().toISOString().slice(0, 10)}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          window.showToast('Reporte exportado correctamente', 'success');
+        } catch (e) {
+          window.showToast('Error al exportar reporte', 'error');
+        }
+        this.exporting = false;
+      },
+
+      clearFilters() {
+        this.filters = {
+          fechaInicio: '',
+          fechaFin: '',
+          visitadorId: '',
+          medicoId: '',
+          especialidadId: '',
+          efectiva: '',
+        };
+        this.loadPage(1);
+      },
+
+      formatDate(date: string | null) {
+        if (!date) return '—';
+        return new Date(date).toLocaleDateString('es-MX', {
+          year: 'numeric', month: '2-digit', day: '2-digit',
+        });
+      },
+
+      getPageNumbers(): number[] {
+        const pages: number[] = [];
+        const total = this.pagination.totalPages;
+        const current = this.pagination.page;
+        const start = Math.max(1, current - 2);
+        const end = Math.min(total, current + 2);
+        for (let i = start; i <= end; i++) pages.push(i);
+        return pages;
+      },
+    };
+  }
+</script>
+
+<style>
+  .toast-enter { animation: toastIn 0.3s ease-out; }
+  .toast-exit { animation: toastOut 0.3s ease-in forwards; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+</style>

@@ -1,0 +1,235 @@
+---
+import AdminLayout from '../layouts/AdminLayout.astro';
+---
+
+<AdminLayout>
+  <div class="space-y-6" x-data="dashboard()" x-init="load()">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">Dashboard</h1>
+        <p class="text-[var(--color-text-muted)] text-sm mt-0.5">Resumen general del sistema</p>
+      </div>
+      <span class="text-sm text-[var(--color-text-muted)]" id="current-date"></span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 card-hover">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)]">Médicos</p>
+            <p class="text-xl font-bold" x-text="data?.counts?.medicos || 0">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 card-hover">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)]">Visitadores</p>
+            <p class="text-xl font-bold" x-text="data?.counts?.visitadores || 0">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 card-hover">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)]">Productos</p>
+            <p class="text-xl font-bold" x-text="data?.counts?.productos || 0">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 card-hover">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.39-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)]">Especialidades</p>
+            <p class="text-xl font-bold" x-text="data?.counts?.especialidades || 0">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 card-hover">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-rose-100 dark:bg-rose-900/30 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)]">Solic. Pend.</p>
+            <p class="text-xl font-bold" x-text="data?.counts?.solicitudesPendientes || 0">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 card-hover">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)]">Medios</p>
+            <p class="text-xl font-bold" x-text="data?.counts?.medios || 0">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visitas KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
+        <p class="text-sm text-[var(--color-text-muted)]">Visitas del Mes</p>
+        <p class="text-3xl font-bold mt-1" x-text="data?.visitas?.totalMes || 0">0</p>
+        <div class="mt-2 flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Total acumulado del mes
+        </div>
+      </div>
+
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
+        <p class="text-sm text-[var(--color-text-muted)]">Efectivas del Mes</p>
+        <p class="text-3xl font-bold mt-1 text-green-600" x-text="data?.visitas?.efectivasMes || 0">0</p>
+        <div class="mt-2 flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Visitas concretadas
+        </div>
+      </div>
+
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
+        <p class="text-sm text-[var(--color-text-muted)]">Efectividad</p>
+        <p class="text-3xl font-bold mt-1 text-primary-600" x-text="(data?.visitas?.efectividad || 0) + '%'">0%</p>
+        <div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div class="bg-primary-500 h-2 rounded-full transition-all" :style="'width:' + (data?.visitas?.efectividad || 0) + '%'"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts & Ultimas Solicitudes -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Visitas por dia chart -->
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
+        <h3 class="font-semibold mb-4">Visitas del Mes</h3>
+        <div class="h-64">
+          <canvas id="visitasChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Solicitudes recientes -->
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
+        <h3 class="font-semibold mb-4">Últimas Solicitudes</h3>
+        <div class="space-y-3">
+          <template x-if="!data?.ultimasSolicitudes?.length">
+            <p class="text-sm text-[var(--color-text-muted)] text-center py-8">No hay solicitudes recientes</p>
+          </template>
+          <template x-for="s in data?.ultimasSolicitudes" :key="s.id">
+            <div class="flex items-center justify-between py-2.5 border-b border-[var(--color-border)] last:border-0">
+              <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full" :class="s.estado === 'pendiente' ? 'bg-amber-500' : s.estado === 'aprobada' ? 'bg-green-500' : 'bg-red-500'"></div>
+                <div>
+                  <p class="text-sm font-medium" x-text="s.tipo?.nombre || 'Solicitud'"></p>
+                  <p class="text-xs text-[var(--color-text-muted)]" x-text="s.visitador?.nombre || '—'"></p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="s.estado === 'pendiente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : s.estado === 'aprobada' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'" x-text="s.estado"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Solicitudes por dia chart -->
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
+      <h3 class="font-semibold mb-4">Solicitudes (Últimos 7 días)</h3>
+      <div class="h-48">
+        <canvas id="solicitudesChart"></canvas>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  document.getElementById('current-date')!.textContent = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+</script>
+
+<script>
+  function dashboard() {
+    return {
+      data: null as any,
+      async load() {
+        try {
+          const r = await fetch('/api/dashboard');
+          this.data = await r.json();
+          this.$nextTick(() => this.renderCharts());
+        } catch (e) { /* empty */ }
+      },
+      renderCharts() {
+        const { visitasPorDia, solicitudesPorDia } = this.data?.charts || {};
+        const days: string[] = [];
+        const totals: number[] = [];
+        const efectivas: number[] = [];
+        for (const d of (visitasPorDia || [])) {
+          days.push(d.fecha.slice(5));
+          totals.push(Number(d.total));
+          efectivas.push(Number(d.efectivas));
+        }
+
+        const canvas1 = document.getElementById('visitasChart') as HTMLCanvasElement;
+        if (canvas1) {
+          import('chart.js/auto').then(({ default: Chart }) => {
+            new Chart(canvas1, {
+              type: 'bar',
+              data: {
+                labels: days,
+                datasets: [
+                  { label: 'Total', data: totals, backgroundColor: '#3b82f6', borderRadius: 6 },
+                  { label: 'Efectivas', data: efectivas, backgroundColor: '#10b981', borderRadius: 6 },
+                ],
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+            });
+          });
+        }
+
+        const solDays: string[] = [];
+        const solTotals: number[] = [];
+        for (const d of (solicitudesPorDia || [])) {
+          solDays.push(d.fecha.slice(5));
+          solTotals.push(Number(d.total));
+        }
+
+        const canvas2 = document.getElementById('solicitudesChart') as HTMLCanvasElement;
+        if (canvas2) {
+          import('chart.js/auto').then(({ default: Chart }) => {
+            new Chart(canvas2, {
+              type: 'line',
+              data: {
+                labels: solDays,
+                datasets: [
+                  { label: 'Solicitudes', data: solTotals, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)', fill: true, tension: 0.4, pointRadius: 4 },
+                ],
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+            });
+          });
+        }
+      },
+      $nextTick(fn: () => void) {
+        requestAnimationFrame(() => requestAnimationFrame(fn));
+      },
+    };
+  }
+</script>

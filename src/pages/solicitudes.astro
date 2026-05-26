@@ -1,0 +1,471 @@
+---
+import AdminLayout from '../layouts/AdminLayout.astro';
+---
+
+<AdminLayout>
+  <div class="space-y-6" x-data="solicitudesPage()" x-init="init()">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">Solicitudes</h1>
+        <p class="text-[var(--color-text-muted)] text-sm mt-0.5">Gestión de solicitudes</p>
+      </div>
+      <button @click="openCreateModal()" class="px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva Solicitud
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+          <button
+            @click="filters.estado = ''; loadPage(1)"
+            :class="!filters.estado ? 'bg-primary-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+            class="px-3.5 py-2 text-sm font-medium transition-colors"
+          >Todos</button>
+          <button
+            @click="filters.estado = 'pendiente'; loadPage(1)"
+            :class="filters.estado === 'pendiente' ? 'bg-amber-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+            class="px-3.5 py-2 text-sm font-medium transition-colors border-l border-[var(--color-border)]"
+          >Pendiente</button>
+          <button
+            @click="filters.estado = 'aprobada'; loadPage(1)"
+            :class="filters.estado === 'aprobada' ? 'bg-green-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+            class="px-3.5 py-2 text-sm font-medium transition-colors border-l border-[var(--color-border)]"
+          >Aprobada</button>
+          <button
+            @click="filters.estado = 'rechazada'; loadPage(1)"
+            :class="filters.estado === 'rechazada' ? 'bg-red-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+            class="px-3.5 py-2 text-sm font-medium transition-colors border-l border-[var(--color-border)]"
+          >Rechazada</button>
+        </div>
+        <input type="date" x-model="filters.fechaInicio" @change="loadPage(1)" class="px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm" />
+        <span class="text-sm text-[var(--color-text-muted)]">a</span>
+        <input type="date" x-model="filters.fechaFin" @change="loadPage(1)" class="px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm" />
+        <button @click="filters = { estado: '', fechaInicio: '', fechaFin: '' }; loadPage(1)" class="px-3 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-[var(--color-border)] bg-[var(--color-surface-alt)]">
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">ID</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Tipo</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Visitador</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Médico</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Estado</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Fecha</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-if="loading">
+              <tr><td colspan="7" class="text-center py-12 text-[var(--color-text-muted)]">Cargando...</td></tr>
+            </template>
+            <template x-if="!loading && items.length === 0">
+              <tr><td colspan="7" class="text-center py-12 text-[var(--color-text-muted)]">No se encontraron solicitudes</td></tr>
+            </template>
+            <template x-for="s in items" :key="s.id">
+              <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors">
+                <td class="px-4 py-3 font-mono text-xs" x-text="s.id"></td>
+                <td class="px-4 py-3" x-text="s.tipo?.nombre || '—'"></td>
+                <td class="px-4 py-3" x-text="s.visitador?.nombre || '—'"></td>
+                <td class="px-4 py-3" x-text="s.medico?.nombre || '—'"></td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                    :class="s.estado === 'pendiente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : s.estado === 'aprobada' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                    x-text="s.estado"></span>
+                </td>
+                <td class="px-4 py-3 text-[var(--color-text-muted)] text-xs" x-text="formatDate(s.createdAt)"></td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-1.5">
+                    <button @click="viewHistorial(s)" class="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Ver historial">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
+                    <template x-if="s.estado === 'pendiente'">
+                      <div class="flex items-center gap-1.5">
+                        <button @click="openResolveModal(s, 'aprobada')" class="p-1.5 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors" title="Aprobar">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <button @click="openResolveModal(s, 'rechazada')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Rechazar">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <template x-if="pagination.totalPages > 1">
+        <div class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)]">
+          <span class="text-sm text-[var(--color-text-muted)]" x-text="`${pagination.total} resultados`"></span>
+          <div class="flex items-center gap-1">
+            <button @click="loadPage(pagination.page - 1)" :disabled="pagination.page <= 1" class="px-3 py-1.5 text-sm rounded-lg hover:bg-[var(--color-surface-alt)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Anterior</button>
+            <template x-for="p in getPageNumbers()" :key="p">
+              <button @click="loadPage(p)" class="w-8 h-8 text-sm rounded-lg transition-colors"
+                :class="p === pagination.page ? 'bg-primary-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+                x-text="p"></button>
+            </template>
+            <button @click="loadPage(pagination.page + 1)" :disabled="!pagination.hasMore" class="px-3 py-1.5 text-sm rounded-lg hover:bg-[var(--color-surface-alt)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Siguiente</button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Create Solicitud Modal -->
+    <template x-if="showCreateModal">
+      <div class="fixed inset-0 z-50 flex items-center justify-center" @click.self="showCreateModal = false">
+        <div class="fixed inset-0 bg-black/50"></div>
+        <div class="relative bg-[var(--color-surface)] rounded-xl shadow-xl border border-[var(--color-border)] w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold">Nueva Solicitud</h3>
+            <button @click="showCreateModal = false" class="p-1.5 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <form @submit.prevent="createSolicitud()" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Tipo de solicitud *</label>
+              <select x-model="createForm.tipoId" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="">Seleccionar tipo...</option>
+                <template x-for="t in tipos" :key="t.id">
+                  <option :value="t.id" x-text="t.nombre"></option>
+                </template>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Médico *</label>
+              <select x-model="createForm.medicoId" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="">Seleccionar médico...</option>
+                <template x-for="m in medicosList" :key="m.id">
+                  <option :value="m.id" x-text="m.nombre"></option>
+                </template>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Visitador *</label>
+              <select x-model="createForm.visitadorId" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="">Seleccionar visitador...</option>
+                <template x-for="v in visitadoresList" :key="v.id">
+                  <option :value="v.id" x-text="v.nombre"></option>
+                </template>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Observación</label>
+              <textarea x-model="createForm.observacion" rows="3" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none" placeholder="Detalles de la solicitud..."></textarea>
+            </div>
+            <div class="flex gap-3 justify-end pt-2">
+              <button type="button" @click="showCreateModal = false" class="px-4 py-2 border border-[var(--color-border)] rounded-lg text-sm hover:bg-[var(--color-surface-alt)] transition-colors">Cancelar</button>
+              <button type="submit" :disabled="creating" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-60">
+                <span x-show="!creating">Crear</span>
+                <span x-show="creating">Creando...</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </template>
+
+    <!-- Resolve Modal -->
+    <template x-if="showResolveModal">
+      <div class="fixed inset-0 z-50 flex items-center justify-center" @click.self="showResolveModal = false">
+        <div class="fixed inset-0 bg-black/50"></div>
+        <div class="relative bg-[var(--color-surface)] rounded-xl shadow-xl border border-[var(--color-border)] w-full max-w-md mx-4 p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold" x-text="resolveAction === 'aprobada' ? 'Aprobar Solicitud' : 'Rechazar Solicitud'"></h3>
+            <button @click="showResolveModal = false" class="p-1.5 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <form @submit.prevent="resolveSolicitud()" class="space-y-4">
+            <p class="text-sm text-[var(--color-text-muted)]">
+              Está por <span class="font-medium" :class="resolveAction === 'aprobada' ? 'text-green-600' : 'text-red-600'" x-text="resolveAction === 'aprobada' ? 'aprobar' : 'rechazar'"></span>
+              la solicitud <span class="font-medium" x-text="'#' + resolveSolicitudData?.id"></span>
+            </p>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Comentario</label>
+              <textarea x-model="resolveComentario" rows="2" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none" placeholder="Motivo de la decisión..."></textarea>
+            </div>
+            <div class="flex gap-3 justify-end pt-2">
+              <button type="button" @click="showResolveModal = false" class="px-4 py-2 border border-[var(--color-border)] rounded-lg text-sm hover:bg-[var(--color-surface-alt)] transition-colors">Cancelar</button>
+              <button type="submit" :disabled="resolving"
+                :class="resolveAction === 'aprobada' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'"
+                class="px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-60">
+                <span x-show="!resolving" x-text="resolveAction === 'aprobada' ? 'Aprobar' : 'Rechazar'"></span>
+                <span x-show="resolving">Procesando...</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </template>
+
+    <!-- Historial Modal -->
+    <template x-if="showHistorialModal">
+      <div class="fixed inset-0 z-50 flex items-center justify-center" @click.self="showHistorialModal = false">
+        <div class="fixed inset-0 bg-black/50"></div>
+        <div class="relative bg-[var(--color-surface)] rounded-xl shadow-xl border border-[var(--color-border)] w-full max-w-lg mx-4 p-6 max-h-[80vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold">Historial de Solicitud #<span x-text="historialData?.solicitudId"></span></h3>
+            <button @click="showHistorialModal = false" class="p-1.5 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <template x-if="historialLoading">
+            <p class="text-sm text-[var(--color-text-muted)] text-center py-8">Cargando historial...</p>
+          </template>
+          <template x-if="!historialLoading && historialEntries.length === 0">
+            <p class="text-sm text-[var(--color-text-muted)] text-center py-8">Sin entradas en el historial</p>
+          </template>
+          <div class="space-y-3">
+            <template x-for="h in historialEntries" :key="h.id">
+              <div class="flex gap-3 p-3 rounded-lg bg-[var(--color-surface-alt)]">
+                <div class="flex-shrink-0 mt-0.5">
+                  <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <template x-if="h.estadoAnterior">
+                      <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" x-text="h.estadoAnterior"></span>
+                    </template>
+                    <template x-if="h.estadoAnterior">
+                      <svg class="w-3 h-3 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </template>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                      :class="h.estadoNuevo === 'pendiente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : h.estadoNuevo === 'aprobada' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                      x-text="h.estadoNuevo"></span>
+                  </div>
+                  <p class="text-sm mt-1" x-text="h.comentario || 'Sin comentario'"></p>
+                  <p class="text-xs text-[var(--color-text-muted)] mt-1">
+                    <span x-text="h.usuario?.nombre || 'Sistema'"></span>
+                    &middot;
+                    <span x-text="formatDate(h.createdAt)"></span>
+                  </p>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</AdminLayout>
+
+<script>
+  function solicitudesPage() {
+    return {
+      items: [] as any[],
+      loading: false,
+      pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
+      filters: { estado: '', fechaInicio: '', fechaFin: '' },
+
+      tipos: [] as any[],
+      medicosList: [] as any[],
+      visitadoresList: [] as any[],
+
+      showCreateModal: false,
+      creating: false,
+      createForm: { tipoId: '', medicoId: '', visitadorId: '', observacion: '' },
+
+      showResolveModal: false,
+      resolveAction: '' as string,
+      resolveSolicitudData: null as any,
+      resolveComentario: '',
+      resolving: false,
+
+      showHistorialModal: false,
+      historialLoading: false,
+      historialData: null as any,
+      historialEntries: [] as any[],
+
+      async init() {
+        await Promise.all([this.loadTipos(), this.loadMedicos(), this.loadVisitadores()]);
+        await this.loadPage(1);
+      },
+
+      async loadTipos() {
+        try {
+          const r = await fetch('/api/solicitudes?limit=1');
+          const data = await r.json();
+        } catch (e) { /* ignore */ }
+      },
+
+      async loadMedicos() {
+        try {
+          const r = await fetch('/api/medicos?limit=100');
+          const data = await r.json();
+          this.medicosList = data.data || [];
+        } catch (e) {
+          this.medicosList = [];
+        }
+      },
+
+      async loadVisitadores() {
+        try {
+          const r = await fetch('/api/visitadores?limit=100');
+          const data = await r.json();
+          this.visitadoresList = data.data || [];
+        } catch (e) {
+          this.visitadoresList = [];
+        }
+      },
+
+      async loadPage(page: number) {
+        this.loading = true;
+        try {
+          const params = new URLSearchParams();
+          params.set('page', String(page));
+          params.set('limit', String(this.pagination.limit));
+          if (this.filters.estado) params.set('estado', this.filters.estado);
+          if (this.filters.fechaInicio) params.set('fechaInicio', this.filters.fechaInicio);
+          if (this.filters.fechaFin) params.set('fechaFin', this.filters.fechaFin);
+
+          const r = await fetch(`/api/solicitudes?${params.toString()}`);
+          const data = await r.json();
+          if (r.ok) {
+            this.items = data.data || [];
+            this.pagination = data.pagination || { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false };
+            // Also extract tipos from the first response if needed
+            if (!this.tipos.length && this.items.length) {
+              const seen = new Set<string>();
+              const tiposList: any[] = [];
+              for (const item of this.items) {
+                if (item.tipo && !seen.has(String(item.tipo.id))) {
+                  seen.add(String(item.tipo.id));
+                  tiposList.push(item.tipo);
+                }
+              }
+              this.tipos = tiposList;
+            }
+          }
+        } catch (e) {
+          console.error('Load solicitudes error:', e);
+        }
+        this.loading = false;
+      },
+
+      openCreateModal() {
+        this.createForm = { tipoId: '', medicoId: '', visitadorId: '', observacion: '' };
+        this.showCreateModal = true;
+      },
+
+      async createSolicitud() {
+        if (!this.createForm.tipoId || !this.createForm.medicoId || !this.createForm.visitadorId) return;
+        this.creating = true;
+        try {
+          const r = await fetch('/api/solicitudes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tipoId: parseInt(this.createForm.tipoId),
+              medicoId: parseInt(this.createForm.medicoId),
+              visitadorId: parseInt(this.createForm.visitadorId),
+              observacion: this.createForm.observacion,
+            }),
+          });
+          if (r.ok) {
+            this.showCreateModal = false;
+            window.showToast('Solicitud creada correctamente', 'success');
+            await this.loadPage(1);
+          } else {
+            const err = await r.json();
+            window.showToast(err.error || 'Error al crear solicitud', 'error');
+          }
+        } catch (e) {
+          window.showToast('Error al crear solicitud', 'error');
+        }
+        this.creating = false;
+      },
+
+      openResolveModal(solicitud: any, action: string) {
+        this.resolveSolicitudData = solicitud;
+        this.resolveAction = action;
+        this.resolveComentario = '';
+        this.showResolveModal = true;
+      },
+
+      async resolveSolicitud() {
+        if (!this.resolveSolicitudData) return;
+        this.resolving = true;
+        try {
+          const r = await fetch('/api/solicitudes/resolver', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              solicitudId: this.resolveSolicitudData.id,
+              estado: this.resolveAction,
+              comentario: this.resolveComentario,
+            }),
+          });
+          if (r.ok) {
+            this.showResolveModal = false;
+            window.showToast(`Solicitud ${this.resolveAction} correctamente`, 'success');
+            await this.loadPage(this.pagination.page);
+          } else {
+            const err = await r.json();
+            window.showToast(err.error || 'Error al resolver solicitud', 'error');
+          }
+        } catch (e) {
+          window.showToast('Error al resolver solicitud', 'error');
+        }
+        this.resolving = false;
+      },
+
+      async viewHistorial(solicitud: any) {
+        this.historialData = solicitud;
+        this.historialEntries = [];
+        this.historialLoading = true;
+        this.showHistorialModal = true;
+        try {
+          const r = await fetch(`/api/solicitudes/${solicitud.id}`);
+          const data = await r.json();
+          if (r.ok) {
+            this.historialEntries = data.historial || [];
+          }
+        } catch (e) {
+          console.error('Load historial error:', e);
+        }
+        this.historialLoading = false;
+      },
+
+      formatDate(date: string | null) {
+        if (!date) return '—';
+        return new Date(date).toLocaleDateString('es-MX', {
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit',
+        });
+      },
+
+      getPageNumbers(): number[] {
+        const pages: number[] = [];
+        const total = this.pagination.totalPages;
+        const current = this.pagination.page;
+        const start = Math.max(1, current - 2);
+        const end = Math.min(total, current + 2);
+        for (let i = start; i <= end; i++) pages.push(i);
+        return pages;
+      },
+    };
+  }
+</script>
+
+<style>
+  .toast-enter { animation: toastIn 0.3s ease-out; }
+  .toast-exit { animation: toastOut 0.3s ease-in forwards; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+</style>
