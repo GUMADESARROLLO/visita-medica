@@ -135,18 +135,6 @@ export const solicitudes = mysqlTable('solicitudes', {
   index('idx_solicitudes_visitador').on(table.visitadorId),
 ]);
 
-export const solicitudHistorial = mysqlTable('solicitud_historial', {
-  id: int('id').autoincrement().primaryKey(),
-  solicitudId: int('solicitud_id').notNull().references(() => solicitudes.id, { onDelete: 'cascade' }),
-  estadoAnterior: varchar('estado_anterior', { length: 50 }),
-  estadoNuevo: varchar('estado_nuevo', { length: 50 }).notNull(),
-  comentario: text('comentario'),
-  usuarioId: int('usuario_id').references(() => usuarios.id),
-  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-}, (table) => [
-  index('idx_historial_solicitud').on(table.solicitudId),
-]);
-
 export const visitas = mysqlTable('visitas', {
   id: int('id').autoincrement().primaryKey(),
   visitadorId: int('visitador_id').notNull().references(() => visitadores.id),
@@ -221,16 +209,11 @@ export const visitadoresRelations = relations(visitadores, ({ one, many }) => ({
   solicitudes: many(solicitudes),
 }));
 
-export const solicitudesRelations = relations(solicitudes, ({ one, many }) => ({
+export const solicitudesRelations = relations(solicitudes, ({ one }) => ({
   tipo: one(tipoSolicitud, { fields: [solicitudes.tipoId], references: [tipoSolicitud.id] }),
   medico: one(medicos, { fields: [solicitudes.medicoId], references: [medicos.id] }),
   visitador: one(visitadores, { fields: [solicitudes.visitadorId], references: [visitadores.id] }),
   resueltoPorUsuario: one(usuarios, { fields: [solicitudes.resueltoPor], references: [usuarios.id] }),
-}));
-
-export const solicitudHistorialRelations = relations(solicitudHistorial, ({ one }) => ({
-  solicitud: one(solicitudes, { fields: [solicitudHistorial.solicitudId], references: [solicitudes.id] }),
-  usuario: one(usuarios, { fields: [solicitudHistorial.usuarioId], references: [usuarios.id] }),
 }));
 
 export const visitasRelations = relations(visitas, ({ one }) => ({

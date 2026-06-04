@@ -1,8 +1,8 @@
 import { db } from '../../../lib/db';
-import { solicitudes, tipoSolicitud, visitadores, medicos, usuarios } from '../../../lib/db/schema/index';
-import { eq, desc, sql } from 'drizzle-orm';
-import { successResponse, errorResponse } from '../../../lib/utils/index';
+import { solicitudes, tipoSolicitud, visitadores, medicos } from '../../../lib/db/schema/index';
+import { eq } from 'drizzle-orm';
 import { verifyToken } from '../../../lib/auth/index';
+import { successResponse, errorResponse } from '../../../lib/utils/index';
 import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async ({ cookies, params }) => {
@@ -54,25 +54,7 @@ export const GET: APIRoute = async ({ cookies, params }) => {
       return errorResponse('Solicitud no encontrada', 404);
     }
 
-    const historial = await db
-      .select({
-        id: solicitudHistorial.id,
-        estadoAnterior: solicitudHistorial.estadoAnterior,
-        estadoNuevo: solicitudHistorial.estadoNuevo,
-        comentario: solicitudHistorial.comentario,
-        createdAt: solicitudHistorial.createdAt,
-        usuario: {
-          id: usuarios.id,
-          nombre: usuarios.nombre,
-          username: usuarios.username,
-        },
-      })
-      .from(solicitudHistorial)
-      .leftJoin(usuarios, eq(solicitudHistorial.usuarioId, usuarios.id))
-      .where(eq(solicitudHistorial.solicitudId, id))
-      .orderBy(sql`solicitud_historial.id ASC`);
-
-    return successResponse({ ...record, historial });
+    return successResponse(record);
   } catch (err) {
     console.error('Solicitud GET error:', err);
     return errorResponse('Error al obtener solicitud', 500);
@@ -86,7 +68,6 @@ export const PUT: APIRoute = async ({ cookies, params, request }) => {
   }
 
   try {
-    const user = await verifyToken(token);
     const id = parseInt(params.id!);
     if (isNaN(id)) {
       return errorResponse('ID inválido', 400);
@@ -103,9 +84,6 @@ export const PUT: APIRoute = async ({ cookies, params, request }) => {
 
     const body = await request.json();
     const updates: Record<string, any> = {};
-    const historialEntries: {
-      comentario: string;
-    } = { comentario: '' };
 
     if (body.observacion !== undefined) {
       updates.observacion = body.observacion;
@@ -113,15 +91,6 @@ export const PUT: APIRoute = async ({ cookies, params, request }) => {
 
     if (body.estado !== undefined) {
       updates.estado = body.estado;
-      if (body.estado !== existing.estado) {
-        await db.insert(solicitudHistorial).values({
-          solicitudId: id,
-          estadoAnterior: existing.estado,
-          estadoNuevo: body.estado,
-          comentario: body.comentario || `Estado cambiado a ${body.estado}`,
-          usuarioId: user!.id,
-        });
-      }
     }
 
     if (Object.keys(updates).length === 0) {

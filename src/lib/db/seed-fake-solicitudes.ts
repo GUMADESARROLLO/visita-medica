@@ -1,6 +1,5 @@
 import { db } from './index';
-import { solicitudes_removed_removed, tipoSolicitud, medicos, visitadores, usuarios } from './schema/index';
-import { eq } from 'drizzle-orm';
+import { solicitudes, tipoSolicitud, medicos, visitadores, usuarios } from './schema/index';
 import 'dotenv/config';
 
 const observaciones = [
@@ -50,28 +49,17 @@ async function main() {
     const estado = estados[Math.floor(Math.random() * estados.length)];
 
     const diasAtras = Math.floor(Math.random() * 60);
-    const createdAt = new Date(Date.now() - diasAtras * 24 * 60 * 60 * 1000);
 
     try {
-      const [result] = await db.insert(solicitudes).values({
+      await db.insert(solicitudes).values({
         tipoId: tipo.id,
         medicoId: medico.id,
         visitadorId: visitador?.id || null,
         observacion,
-        estado,
+        estado: estado as 'pendiente' | 'aprobada' | 'rechazada',
         resueltoPor: estado !== 'pendiente' ? (admin?.id || null) : null,
         fechaResolucion: estado !== 'pendiente' ? new Date(Date.now() - (diasAtras - 2) * 24 * 60 * 60 * 1000) : null,
       });
-
-      if (estado !== 'pendiente') {
-        await db.insert(SolicitudHistorial_removed_removed).values({
-          solicitudId: Number(result.insertId),
-          estadoAnterior: 'pendiente',
-          estadoNuevo: estado,
-          comentario: estado === 'aprobada' ? 'Solicitud aprobada' : 'Solicitud rechazada',
-          usuarioId: admin?.id || null,
-        });
-      }
 
       creadas++;
     } catch (err: any) {
@@ -82,10 +70,6 @@ async function main() {
   }
 
   console.log(`${creadas} solicitudes generadas`);
-
-  const [check] = await db.select({ total: count() }).from(solicitudes);
-  const [checkH] = await db.select({ total: count() }).from(SolicitudHistorial_removed_removed);
-  console.log(`Verificacion: ${check?.total || 0} en solicitudes, ${checkH?.total || 0} en historial`);
 
   const muestras = await db.select({ id: solicitudes.id, estado: solicitudes.estado }).from(solicitudes).limit(5);
   console.log('Muestras de solicitudes:', JSON.stringify(muestras));

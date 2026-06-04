@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { solicitudes, tipoSolicitud, visitadores, medicos } from '../../../lib/db/schema/index';
-import { eq, like, and, gte, lte, ilike, count, sql } from 'drizzle-orm';
+import { eq, like, and, gte, lte, count, sql } from 'drizzle-orm';
 import { parseSearchParams, paginatedResponse, successResponse, errorResponse } from '../../../lib/utils/index';
 import { verifyToken } from '../../../lib/auth/index';
 import type { APIRoute } from 'astro';
@@ -94,7 +94,6 @@ export const POST: APIRoute = async ({ cookies, request }) => {
   }
 
   try {
-    const user = await verifyToken(token);
     const body = await request.json();
 
     if (!body.tipoId || !body.medicoId || !body.visitadorId) {
@@ -109,14 +108,6 @@ export const POST: APIRoute = async ({ cookies, request }) => {
       visitadorId: body.visitadorId,
       observacion: body.observacion || null,
       estado,
-    });
-
-    await db.insert(solicitudHistorial).values({
-      solicitudId: Number(created.insertId),
-      estadoAnterior: null,
-      estadoNuevo: estado,
-      comentario: body.comentario || 'Solicitud creada',
-      usuarioId: user!.id,
     });
 
     const [record] = await db
