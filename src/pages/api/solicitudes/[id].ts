@@ -1,5 +1,5 @@
 import { db } from '../../../lib/db';
-import { solicitudes, tipoSolicitud, visitadores, medicos, solicitudHistorial, usuarios } from '../../../lib/db/schema/index';
+import { solicitudes, tipoSolicitud, visitadores, medicos, usuarios } from '../../../lib/db/schema/index';
 import { eq, desc, sql } from 'drizzle-orm';
 import { successResponse, errorResponse } from '../../../lib/utils/index';
 import { verifyToken } from '../../../lib/auth/index';

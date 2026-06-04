@@ -1,5 +1,5 @@
 import { db } from '../../../lib/db';
-import { solicitudes, solicitudHistorial } from '../../../lib/db/schema/index';
+import { solicitudes } from '../../../lib/db/schema/index';
 import { eq } from 'drizzle-orm';
 import { successResponse, errorResponse } from '../../../lib/utils/index';
 import { verifyToken } from '../../../lib/auth/index';
@@ -46,23 +46,14 @@ export const POST: APIRoute = async ({ cookies, request }) => {
       .set({
         estado,
         resueltoPor: user!.id,
-        fechaResolucion: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        fechaResolucion: new Date(),
       })
       .where(eq(solicitudes.id, solicitudId));
-
-    await db.insert(solicitudHistorial).values({
-      solicitudId,
-      estadoAnterior: existing.estado,
-      estadoNuevo: estado,
-      comentario: body.comentario || `Solicitud ${estado}`,
-      usuarioId: user!.id,
-    });
 
     return successResponse({
       solicitudId,
       estado,
       resueltoPor: user!.id,
-      fechaResolucion: now,
       message: `Solicitud ${estado} correctamente`,
     });
   } catch (err) {

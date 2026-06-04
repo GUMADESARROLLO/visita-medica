@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { medicos, especialidades } from '../../../lib/db/schema/index';
-import { eq, like, and, count, or } from 'drizzle-orm';
+import { eq, like, and, count, isNull, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { verifyToken } from '../../../lib/auth/index';
 import { successResponse, errorResponse, parseSearchParams, paginatedResponse } from '../../../lib/utils/index';
@@ -14,15 +14,14 @@ export const GET: APIRoute = async ({ request, cookies }) => {
   try {
     const { page, limit, search, offset, filters } = parseSearchParams(request.url);
 
-    const whereConditions = [];
+    const whereConditions = [
+      eq(medicos.activo, '1'),
+      isNull(medicos.deletedAt),
+    ];
 
     if (search) {
       whereConditions.push(
-        or(
-          like(medicos.codigo, `%${search}%`),
-          like(medicos.nombre, `%${search}%`),
-          like(medicos.email, `%${search}%`),
-        ),
+        sql`(${like(medicos.codigo, `%${search}%`)} OR ${like(medicos.nombre, `%${search}%`)} OR ${like(medicos.email, `%${search}%`)})`,
       );
     }
 
@@ -106,7 +105,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       direccion: direccion || null,
       telefono: telefono || null,
       email: email || null,
-      activo: activo !== undefined ? activo : '1',
+      activo: activo !== undefined ? (activo === true || activo === '1' ? '1' : '0') : '1',
     });
 
     return successResponse({ id: Number(result[0].insertId), codigo, nombre }, 201);

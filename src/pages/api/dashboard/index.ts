@@ -101,6 +101,7 @@ export const GET: APIRoute = async ({ cookies }) => {
       visitas: {
         totalMes: totalVisitasMes,
         efectivasMes: totalEfectivas,
+        noEfectivasMes: totalVisitasMes - totalEfectivas,
         efectividad,
       },
       ultimasSolicitudes,

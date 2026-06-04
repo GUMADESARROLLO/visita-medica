@@ -1,5 +1,4 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../../lib/db';
 import { verifyToken } from '../../../lib/auth/index';
 
 export const GET: APIRoute = async ({ cookies }) => {

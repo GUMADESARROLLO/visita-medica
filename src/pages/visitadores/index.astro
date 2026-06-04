@@ -1,20 +1,20 @@
 ---
-import AdminLayout from '../layouts/AdminLayout.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
 
 <AdminLayout>
-  <div class="space-y-6" x-data="medicosPage()" x-init="load()">
+  <div class="space-y-6" x-data="visitadoresPage()" x-init="load()">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold">Medicos</h1>
-        <p class="text-[var(--color-text-muted)] text-sm mt-0.5">Gestion de medicos del sistema</p>
+        <h1 class="text-2xl font-bold">Visitadores</h1>
+        <p class="text-[var(--color-text-muted)] text-sm mt-0.5">Gestion de visitadores medicos</p>
       </div>
       <button
         @click="openModal()"
         class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Nuevo Medico
+        Nuevo Visitador
       </button>
     </div>
 
@@ -26,19 +26,9 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           x-model="searchQuery"
           @input.debounce.300ms="debounceSearch()"
           placeholder="Buscar por codigo, nombre o email..."
-          class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] pl-10 w-full"
+          class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] pl-12 w-full"
         />
       </div>
-      <select
-        x-model="filterEspecialidadId"
-        @change="load()"
-        class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] text-sm"
-      >
-        <option value="">Todas lspecialidades</option>
-        <template x-for="e in especialidadesData" :key="e.id">
-          <option :value="e.id" x-text="e.nombre"></option>
-        </template>
-      </select>
       <select
         x-model="filterActivo"
         @change="load()"
@@ -57,9 +47,9 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             <tr class="border-b border-[var(--color-border)] bg-[var(--color-surface-alt)]">
               <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Codigo</th>
               <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Nombre</th>
-              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Especialidad</th>
-              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Telefono</th>
               <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Email</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Telefono</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Usuario</th>
               <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Estado</th>
               <th class="text-right px-4 py-3 font-medium text-[var(--color-text-muted)]">Acciones</th>
             </tr>
@@ -77,16 +67,19 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             </template>
             <template x-if="!loading && items.length === 0">
               <tr>
-                <td colspan="7" class="text-center py-12 text-[var(--color-text-muted)]">No se encontraron medicos</td>
+                <td colspan="7" class="text-center py-12 text-[var(--color-text-muted)]">No se encontraron visitadores</td>
               </tr>
             </template>
             <template x-for="item in items" :key="item.id">
               <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors">
                 <td class="px-4 py-3 font-mono text-xs" x-text="item.codigo"></td>
                 <td class="px-4 py-3 font-medium" x-text="item.nombre"></td>
-                <td class="px-4 py-3 text-[var(--color-text-muted)]" x-text="item.especialidad?.nombre || '—'"></td>
-                <td class="px-4 py-3 text-[var(--color-text-muted)]" x-text="item.telefono || '—'"></td>
                 <td class="px-4 py-3 text-[var(--color-text-muted)]" x-text="item.email || '—'"></td>
+                <td class="px-4 py-3 text-[var(--color-text-muted)]" x-text="item.telefono || '—'"></td>
+                <td class="px-4 py-3 text-[var(--color-text-muted)]">
+                  <span x-show="item.usuario?.username" x-text="item.usuario?.username"></span>
+                  <span x-show="!item.usuario?.username" class="text-[var(--color-text-muted)]">—</span>
+                </td>
                 <td class="px-4 py-3">
                   <span
                     class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
@@ -96,9 +89,6 @@ import AdminLayout from '../layouts/AdminLayout.astro';
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center justify-end gap-1">
-                    <button @click="openProductosModal(item)" class="p-2 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors text-primary-600" title="Productos">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    </button>
                     <button @click="openModal(item)" class="p-2 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors" title="Editar">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
@@ -136,7 +126,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       <div class="absolute inset-0 bg-black/50 modal-backdrop" @click="closeModal()"></div>
       <div class="relative bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto modal-content" @click.stop>
         <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 class="text-lg font-semibold" x-text="editingId ? 'Editar Medico' : 'Nuevo Medico'"></h2>
+          <h2 class="text-lg font-semibold" x-text="editingId ? 'Editar Visitador' : 'Nuevo Visitador'"></h2>
           <button @click="closeModal()" class="p-1 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
@@ -160,35 +150,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
               class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
             />
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1.5">Especialidad</label>
-            <select
-              x-model="formData.especialidadId"
-              class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
-            >
-              <option value="">Seleccionar especialidad</option>
-              <template x-for="e in especialidadesData" :key="e.id">
-                <option :value="e.id" x-text="e.nombre"></option>
-              </template>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1.5">Direccion</label>
-            <input
-              type="text"
-              x-model="formData.direccion"
-              class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
-            />
-          </div>
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-1.5">Telefono</label>
-              <input
-                type="text"
-                x-model="formData.telefono"
-                class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
-              />
-            </div>
             <div>
               <label class="block text-sm font-medium mb-1.5">Email</label>
               <input
@@ -197,12 +159,21 @@ import AdminLayout from '../layouts/AdminLayout.astro';
                 class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
               />
             </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Telefono</label>
+              <input
+                type="text"
+                x-model="formData.telefono"
+                class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
+              />
+            </div>
           </div>
           <div>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" x-model="formData.activo" true-value="1" false-value="0" class="w-4 h-4 rounded border-[var(--color-border)]" />
-              <span class="text-sm">Activo</span>
-            </label>
+            <label class="block text-sm font-medium mb-1.5">Estado</label>
+            <select x-model="formData.activo" class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full">
+              <option value="1">Activo</option>
+              <option value="0">Inactivo</option>
+            </select>
           </div>
           <div class="flex justify-end gap-3 pt-2">
             <button type="button" @click="closeModal()" class="px-4 py-2.5 rounded-xl text-sm border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors">Cancelar</button>
@@ -211,84 +182,28 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         </form>
       </div>
     </div>
-
-    <!-- Productos Modal -->
-    <div x-show="showProductosModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition>
-      <div class="absolute inset-0 bg-black/50 modal-backdrop" @click="closeProductosModal()"></div>
-      <div class="relative bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto modal-content" @click.stop>
-        <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 class="text-lg font-semibold">Productos - <span x-text="productosMedico?.nombre"></span></h2>
-          <button @click="closeProductosModal()" class="p-1 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <div class="p-6 space-y-4">
-          <template x-if="productosLoading">
-            <div class="text-center py-8 text-[var(--color-text-muted)]">
-              <svg class="animate-spin w-5 h-5 mx-auto mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-              Cargando...
-            </div>
-          </template>
-          <template x-if="!productosLoading">
-            <div class="space-y-2">
-              <template x-for="p in productosDisponibles" :key="p.id">
-                <label class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[var(--color-surface-alt)] cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    :value="p.id"
-                    x-model="selectedProductos"
-                    class="w-4 h-4 rounded border-[var(--color-border)] text-primary-600"
-                  />
-                  <div>
-                    <p class="text-sm font-medium" x-text="p.nombre"></p>
-                    <p class="text-xs text-[var(--color-text-muted)]" x-text="p.codigo"></p>
-                  </div>
-                </label>
-              </template>
-            </div>
-          </template>
-          <template x-if="!productosLoading && productosDisponibles.length === 0">
-            <p class="text-center py-8 text-[var(--color-text-muted)]">No hay productos disponibles</p>
-          </template>
-          <div class="flex justify-end gap-3 pt-2">
-            <button type="button" @click="closeProductosModal()" class="px-4 py-2.5 rounded-xl text-sm border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors">Cancelar</button>
-            <button @click="saveProductos()" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">Guardar</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </AdminLayout>
 
 <script is:inline>
-  window.medicosPage = function() {
+  window.visitadoresPage = function() {
     return {
       items: [],
       pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
       loading: true,
       searchQuery: '',
       searchTimer: null,
-      filterEspecialidadId: '',
       filterActivo: '',
-      especialidadesData: [],
 
       showModal: false,
       editingId: null,
       formData: {
         codigo: '',
         nombre: '',
-        especialidadId: '',
-        direccion: '',
-        telefono: '',
         email: '',
+        telefono: '',
         activo: '1',
       },
-
-      showProductosModal: false,
-      productosMedico: null,
-      productosDisponibles: [],
-      selectedProductos: [],
-      productosLoading: false,
 
       async load() {
         this.loading = true;
@@ -298,16 +213,14 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             limit: String(this.pagination.limit),
             search: this.searchQuery,
           });
-          if (this.filterEspecialidadId) params.set('especialidadId', this.filterEspecialidadId);
           if (this.filterActivo) params.set('activo', this.filterActivo);
 
-          const r = await fetch(`/api/medicos?${params.toString()}`);
+          const r = await fetch(`/api/visitadores?${params.toString()}`);
           const data = await r.json();
           this.items = data.data || [];
           this.pagination = data.pagination || { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false };
-          this.especialidadesData = data.especialidades || [];
         } catch (e) {
-          window.showToast('Error al cargar medicos', 'error');
+          window.showToast('Error al cargar visitadores', 'error');
         }
         this.loading = false;
       },
@@ -329,15 +242,13 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           this.formData = {
             codigo: item.codigo || '',
             nombre: item.nombre || '',
-            especialidadId: item.especialidadId || '',
-            direccion: item.direccion || '',
-            telefono: item.telefono || '',
             email: item.email || '',
+            telefono: item.telefono || '',
             activo: item.activo || '1',
-          };
+            };
         } else {
           this.editingId = null;
-          this.formData = { codigo: '', nombre: '', especialidadId: '', direccion: '', telefono: '', email: '', activo: '1' };
+          this.formData = { codigo: '', nombre: '', email: '', telefono: '', activo: '1' };
         }
         this.showModal = true;
       },
@@ -345,12 +256,12 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       closeModal() {
         this.showModal = false;
         this.editingId = null;
-        this.formData = { codigo: '', nombre: '', especialidadId: '', direccion: '', telefono: '', email: '', activo: '1' };
+        this.formData = { codigo: '', nombre: '', email: '', telefono: '', activo: '1' };
       },
 
       async save() {
         try {
-          const url = this.editingId ? `/api/medicos/${this.editingId}` : '/api/medicos';
+          const url = this.editingId ? `/api/visitadores/${this.editingId}` : '/api/visitadores';
           const method = this.editingId ? 'PUT' : 'POST';
           const r = await fetch(url, {
             method,
@@ -361,7 +272,12 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             const err = await r.json();
             throw new Error(err.error || 'Error al guardar');
           }
-          window.showToast(this.editingId ? 'Medico actualizado exitosamente' : 'Medico creado exitosamente');
+          const result = await r.json();
+          if (result.userCreated) {
+            window.showToast('Visitador y cuenta de usuario creados exitosamente');
+          } else {
+            window.showToast(this.editingId ? 'Visitador actualizado exitosamente' : 'Visitador creado exitosamente');
+          }
           this.closeModal();
           this.load();
         } catch (e) {
@@ -370,49 +286,12 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       },
 
       async deleteItem(id) {
-        if (!confirm('Estas seguro de eliminar este medico?')) return;
+        if (!await window.confirmAction('Eliminar visitador', 'Estas seguro de eliminar este visitador?')) return;
         try {
-          const r = await fetch(`/api/medicos/${id}`, { method: 'DELETE' });
+          const r = await fetch(`/api/visitadores/${id}`, { method: 'DELETE' });
           if (!r.ok) throw new Error('Error al eliminar');
-          window.showToast('Medico eliminado exitosamente');
+          window.showToast('Visitador eliminado exitosamente');
           this.load();
-        } catch (e) {
-          window.showToast(e.message, 'error');
-        }
-      },
-
-      async openProductosModal(medico) {
-        this.productosMedico = medico;
-        this.productosLoading = true;
-        this.showProductosModal = true;
-        try {
-          const r = await fetch(`/api/medicos/productos/${medico.id}`);
-          const data = await r.json();
-          this.productosDisponibles = data.disponibles || [];
-          this.selectedProductos = (data.asignados || []).map((a) => a.productoId);
-        } catch (e) {
-          window.showToast('Error al cargar productos', 'error');
-        }
-        this.productosLoading = false;
-      },
-
-      closeProductosModal() {
-        this.showProductosModal = false;
-        this.productosMedico = null;
-        this.productosDisponibles = [];
-        this.selectedProductos = [];
-      },
-
-      async saveProductos() {
-        try {
-          const r = await fetch(`/api/medicos/productos/${this.productosMedico.id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productoIds: this.selectedProductos }),
-          });
-          if (!r.ok) throw new Error('Error al guardar productos');
-          window.showToast('Productos asignados exitosamente');
-          this.closeProductosModal();
         } catch (e) {
           window.showToast(e.message, 'error');
         }

@@ -1,34 +1,44 @@
 ---
-import AdminLayout from '../layouts/AdminLayout.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
 
 <AdminLayout>
-  <div class="space-y-6" x-data="visitadoresPage()" x-init="load()">
+  <div class="space-y-6" x-data="medicosPage()" x-init="load()">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold">Visitadores</h1>
-        <p class="text-[var(--color-text-muted)] text-sm mt-0.5">Gestion de visitadores medicos</p>
+        <h1 class="text-2xl font-bold">Medicos</h1>
+        <p class="text-[var(--color-text-muted)] text-sm mt-0.5">Gestion de medicos del sistema</p>
       </div>
       <button
         @click="openModal()"
         class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Nuevo Visitador
+        Nuevo Medico
       </button>
     </div>
 
     <div class="flex flex-col sm:flex-row gap-3">
       <div class="relative flex-1">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <svg class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         <input
           type="text"
           x-model="searchQuery"
           @input.debounce.300ms="debounceSearch()"
           placeholder="Buscar por codigo, nombre o email..."
-          class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] pl-10 w-full"
+          class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] pl-12 w-full"
         />
       </div>
+      <select
+        x-model="filterEspecialidadId"
+        @change="load()"
+        class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] text-sm"
+      >
+        <option value="">Todas lspecialidades</option>
+        <template x-for="e in especialidadesData" :key="e.id">
+          <option :value="e.id" x-text="e.nombre"></option>
+        </template>
+      </select>
       <select
         x-model="filterActivo"
         @change="load()"
@@ -47,9 +57,9 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             <tr class="border-b border-[var(--color-border)] bg-[var(--color-surface-alt)]">
               <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Codigo</th>
               <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Nombre</th>
-              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Email</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Especialidad</th>
               <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Telefono</th>
-              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Usuario</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Email</th>
               <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Estado</th>
               <th class="text-right px-4 py-3 font-medium text-[var(--color-text-muted)]">Acciones</th>
             </tr>
@@ -67,19 +77,16 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             </template>
             <template x-if="!loading && items.length === 0">
               <tr>
-                <td colspan="7" class="text-center py-12 text-[var(--color-text-muted)]">No se encontraron visitadores</td>
+                <td colspan="7" class="text-center py-12 text-[var(--color-text-muted)]">No se encontraron medicos</td>
               </tr>
             </template>
             <template x-for="item in items" :key="item.id">
               <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors">
                 <td class="px-4 py-3 font-mono text-xs" x-text="item.codigo"></td>
                 <td class="px-4 py-3 font-medium" x-text="item.nombre"></td>
-                <td class="px-4 py-3 text-[var(--color-text-muted)]" x-text="item.email || '—'"></td>
+                <td class="px-4 py-3 text-[var(--color-text-muted)]" x-text="item.especialidad?.nombre || '—'"></td>
                 <td class="px-4 py-3 text-[var(--color-text-muted)]" x-text="item.telefono || '—'"></td>
-                <td class="px-4 py-3 text-[var(--color-text-muted)]">
-                  <span x-show="item.usuario?.username" x-text="item.usuario?.username"></span>
-                  <span x-show="!item.usuario?.username" class="text-[var(--color-text-muted)]">—</span>
-                </td>
+                <td class="px-4 py-3 text-[var(--color-text-muted)]" x-text="item.email || '—'"></td>
                 <td class="px-4 py-3">
                   <span
                     class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
@@ -89,6 +96,9 @@ import AdminLayout from '../layouts/AdminLayout.astro';
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center justify-end gap-1">
+                    <a :href="'/medicos/' + item.id" class="p-2 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors text-primary-600" title="Productos">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </a>
                     <button @click="openModal(item)" class="p-2 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors" title="Editar">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
@@ -126,7 +136,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       <div class="absolute inset-0 bg-black/50 modal-backdrop" @click="closeModal()"></div>
       <div class="relative bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto modal-content" @click.stop>
         <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 class="text-lg font-semibold" x-text="editingId ? 'Editar Visitador' : 'Nuevo Visitador'"></h2>
+          <h2 class="text-lg font-semibold" x-text="editingId ? 'Editar Medico' : 'Nuevo Medico'"></h2>
           <button @click="closeModal()" class="p-1 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
@@ -150,20 +160,40 @@ import AdminLayout from '../layouts/AdminLayout.astro';
               class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
             />
           </div>
+          <div>
+            <label class="block text-sm font-medium mb-1.5">Especialidad</label>
+            <select
+              x-model="formData.especialidadId"
+              class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
+            >
+              <option value="">Seleccionar especialidad</option>
+              <template x-for="e in especialidadesData" :key="e.id">
+                <option :value="e.id" x-text="e.nombre"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1.5">Direccion</label>
+            <textarea
+              x-model="formData.direccion"
+              rows="3"
+              class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full resize-none"
+            ></textarea>
+          </div>
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-1.5">Email</label>
-              <input
-                type="email"
-                x-model="formData.email"
-                class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
-              />
-            </div>
             <div>
               <label class="block text-sm font-medium mb-1.5">Telefono</label>
               <input
                 type="text"
                 x-model="formData.telefono"
+                class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Email</label>
+              <input
+                type="email"
+                x-model="formData.email"
                 class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full"
               />
             </div>
@@ -182,26 +212,31 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         </form>
       </div>
     </div>
+
   </div>
 </AdminLayout>
 
 <script is:inline>
-  window.visitadoresPage = function() {
+  window.medicosPage = function() {
     return {
       items: [],
       pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
       loading: true,
       searchQuery: '',
       searchTimer: null,
+      filterEspecialidadId: '',
       filterActivo: '',
+      especialidadesData: [],
 
       showModal: false,
       editingId: null,
       formData: {
         codigo: '',
         nombre: '',
-        email: '',
+        especialidadId: '',
+        direccion: '',
         telefono: '',
+        email: '',
         activo: '1',
       },
 
@@ -213,14 +248,16 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             limit: String(this.pagination.limit),
             search: this.searchQuery,
           });
+          if (this.filterEspecialidadId) params.set('especialidadId', this.filterEspecialidadId);
           if (this.filterActivo) params.set('activo', this.filterActivo);
 
-          const r = await fetch(`/api/visitadores?${params.toString()}`);
+          const r = await fetch(`/api/medicos?${params.toString()}`);
           const data = await r.json();
           this.items = data.data || [];
           this.pagination = data.pagination || { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false };
+          this.especialidadesData = data.especialidades || [];
         } catch (e) {
-          window.showToast('Error al cargar visitadores', 'error');
+          window.showToast('Error al cargar medicos', 'error');
         }
         this.loading = false;
       },
@@ -242,13 +279,15 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           this.formData = {
             codigo: item.codigo || '',
             nombre: item.nombre || '',
-            email: item.email || '',
+            especialidadId: item.especialidadId || '',
+            direccion: item.direccion || '',
             telefono: item.telefono || '',
+            email: item.email || '',
             activo: item.activo || '1',
-            };
+          };
         } else {
           this.editingId = null;
-          this.formData = { codigo: '', nombre: '', email: '', telefono: '', activo: '1' };
+          this.formData = { codigo: '', nombre: '', especialidadId: '', direccion: '', telefono: '', email: '', activo: '1' };
         }
         this.showModal = true;
       },
@@ -256,12 +295,12 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       closeModal() {
         this.showModal = false;
         this.editingId = null;
-        this.formData = { codigo: '', nombre: '', email: '', telefono: '', activo: '1' };
+        this.formData = { codigo: '', nombre: '', especialidadId: '', direccion: '', telefono: '', email: '', activo: '1' };
       },
 
       async save() {
         try {
-          const url = this.editingId ? `/api/visitadores/${this.editingId}` : '/api/visitadores';
+          const url = this.editingId ? `/api/medicos/${this.editingId}` : '/api/medicos';
           const method = this.editingId ? 'PUT' : 'POST';
           const r = await fetch(url, {
             method,
@@ -272,12 +311,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             const err = await r.json();
             throw new Error(err.error || 'Error al guardar');
           }
-          const result = await r.json();
-          if (result.userCreated) {
-            window.showToast('Visitador y cuenta de usuario creados exitosamente');
-          } else {
-            window.showToast(this.editingId ? 'Visitador actualizado exitosamente' : 'Visitador creado exitosamente');
-          }
+          window.showToast(this.editingId ? 'Medico actualizado exitosamente' : 'Medico creado exitosamente');
           this.closeModal();
           this.load();
         } catch (e) {
@@ -286,11 +320,11 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       },
 
       async deleteItem(id) {
-        if (!confirm('Estas seguro de eliminar este visitador?')) return;
+        if (!await window.confirmAction('Eliminar médico', 'Estas seguro de eliminar este medico?')) return;
         try {
-          const r = await fetch(`/api/visitadores/${id}`, { method: 'DELETE' });
+          const r = await fetch(`/api/medicos/${id}`, { method: 'DELETE' });
           if (!r.ok) throw new Error('Error al eliminar');
-          window.showToast('Visitador eliminado exitosamente');
+          window.showToast('Medico eliminado exitosamente');
           this.load();
         } catch (e) {
           window.showToast(e.message, 'error');

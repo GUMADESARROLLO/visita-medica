@@ -159,7 +159,7 @@ export const DELETE: APIRoute = async ({ cookies, params }) => {
 
     await db
       .update(productos)
-      .set({ deletedAt: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+      .set({ deletedAt: new Date() })
       .where(eq(productos.id, id));
 
     return successResponse({ message: 'Producto eliminado correctamente' });

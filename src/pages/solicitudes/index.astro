@@ -1,0 +1,495 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout>
+  <div class="space-y-6" x-data="solicitudesPage()" x-init="init()">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">Solicitudes</h1>
+        <p class="text-[var(--color-text-muted)] text-sm mt-0.5">Gestión de solicitudes</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+        <button
+          @click="filters.estado = ''; loadPage(1)"
+          :class="!filters.estado ? 'bg-primary-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+          class="px-4 py-2 text-sm font-medium transition-colors"
+        >TODOS</button>
+        <button
+          @click="filters.estado = 'pendiente'; loadPage(1)"
+          :class="filters.estado === 'pendiente' ? 'bg-amber-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+          class="px-4 py-2 text-sm font-medium transition-colors border-l border-[var(--color-border)]"
+        >PENDIENTE</button>
+        <button
+          @click="filters.estado = 'aprobada'; loadPage(1)"
+          :class="filters.estado === 'aprobada' ? 'bg-green-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+          class="px-4 py-2 text-sm font-medium transition-colors border-l border-[var(--color-border)]"
+        >APROBADA</button>
+        <button
+          @click="filters.estado = 'rechazada'; loadPage(1)"
+          :class="filters.estado === 'rechazada' ? 'bg-red-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+          class="px-4 py-2 text-sm font-medium transition-colors border-l border-[var(--color-border)]"
+        >RECHAZADA</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="text" id="dateRange" readonly class="px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm w-56 cursor-pointer" placeholder="Rango..." />
+        <button @click="aplicarFiltros()" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors">Filtrar</button>
+        <button @click="limpiarFiltros()" class="px-4 py-2 border border-[var(--color-border)] rounded-lg text-sm hover:bg-[var(--color-surface-alt)] transition-colors">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-[var(--color-border)] bg-[var(--color-surface-alt)]">
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">ID</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Tipo</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Visitador</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Médico</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Estado</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Fecha</th>
+              <th class="text-left px-4 py-3 font-medium text-[var(--color-text-muted)]">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-if="loading">
+              <tr><td colspan="7" class="text-center py-12 text-[var(--color-text-muted)]">Cargando...</td></tr>
+            </template>
+            <template x-if="!loading && items.length === 0">
+              <tr><td colspan="7" class="text-center py-12 text-[var(--color-text-muted)]">No se encontraron solicitudes</td></tr>
+            </template>
+            <template x-for="s in items" :key="s.id">
+              <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors">
+                <td class="px-4 py-3 font-mono text-xs" x-text="s.id"></td>
+                <td class="px-4 py-3" x-text="s.tipo?.nombre || '—'"></td>
+                <td class="px-4 py-3" x-text="s.visitador?.nombre || '—'"></td>
+                <td class="px-4 py-3" x-text="s.medico?.nombre || '—'"></td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                    :class="s.estado === 'pendiente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : s.estado === 'aprobada' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                    x-text="s.estado"></span>
+                </td>
+                <td class="px-4 py-3 text-[var(--color-text-muted)] text-xs" x-text="formatDate(s.createdAt)"></td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-1.5">
+                    <template x-if="s.estado === 'pendiente'">
+                      <div class="flex items-center gap-1.5">
+                        <button @click="openResolveModal(s, 'aprobada')" class="p-1.5 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors" title="Aprobar">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <button @click="openResolveModal(s, 'rechazada')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Rechazar">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <template x-if="pagination.totalPages > 1">
+        <div class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)]">
+          <span class="text-sm text-[var(--color-text-muted)]" x-text="`${pagination.total} resultados`"></span>
+          <div class="flex items-center gap-1">
+            <button @click="loadPage(pagination.page - 1)" :disabled="pagination.page <= 1" class="px-3 py-1.5 text-sm rounded-lg hover:bg-[var(--color-surface-alt)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Anterior</button>
+            <template x-for="p in getPageNumbers()" :key="p">
+              <button @click="loadPage(p)" class="w-8 h-8 text-sm rounded-lg transition-colors"
+                :class="p === pagination.page ? 'bg-primary-500 text-white' : 'hover:bg-[var(--color-surface-alt)]'"
+                x-text="p"></button>
+            </template>
+            <button @click="loadPage(pagination.page + 1)" :disabled="!pagination.hasMore" class="px-3 py-1.5 text-sm rounded-lg hover:bg-[var(--color-surface-alt)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Siguiente</button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+
+    <!-- Resolve Modal -->
+    <template x-if="showResolveModal">
+      <div class="fixed inset-0 z-50 flex items-center justify-center" @click.self="showResolveModal = false">
+        <div class="fixed inset-0 bg-black/50"></div>
+        <div class="relative bg-[var(--color-surface)] rounded-xl shadow-xl border border-[var(--color-border)] w-full max-w-md mx-4 p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold" x-text="resolveAction === 'aprobada' ? 'Aprobar Solicitud' : 'Rechazar Solicitud'"></h3>
+            <button @click="showResolveModal = false" class="p-1.5 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <form @submit.prevent="resolveSolicitud()" class="space-y-4">
+            <p class="text-sm text-[var(--color-text-muted)]">
+              Está por <span class="font-medium" :class="resolveAction === 'aprobada' ? 'text-green-600' : 'text-red-600'" x-text="resolveAction === 'aprobada' ? 'aprobar' : 'rechazar'"></span>
+              la solicitud <span class="font-medium" x-text="'#' + resolveSolicitudData?.id"></span>
+            </p>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Comentario</label>
+              <textarea x-model="resolveComentario" rows="2" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none" placeholder="Motivo de la decisión..."></textarea>
+            </div>
+            <div class="flex gap-3 justify-end pt-2">
+              <button type="button" @click="showResolveModal = false" class="px-4 py-2 border border-[var(--color-border)] rounded-lg text-sm hover:bg-[var(--color-surface-alt)] transition-colors">Cancelar</button>
+              <button type="submit" :disabled="resolving"
+                :class="resolveAction === 'aprobada' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'"
+                class="px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-60">
+                <span x-show="!resolving" x-text="resolveAction === 'aprobada' ? 'Aprobar' : 'Rechazar'"></span>
+                <span x-show="resolving">Procesando...</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </template>
+
+</AdminLayout>
+
+<script is:inline>
+  window.solicitudesPage = function() {
+    return {
+      items: [],
+      loading: false,
+      pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
+      filters: { estado: '', fechaInicio: '', fechaFin: '' },
+
+      medicosList: [],
+      visitadoresList: [],
+
+      showResolveModal: false,
+      resolveAction: '',
+      resolveSolicitudData: null,
+      resolveComentario: '',
+      resolving: false,
+
+      async init() {
+        await Promise.all([this.loadMedicos(), this.loadVisitadores()]);
+        await this.loadPage(1);
+      },
+
+      async loadMedicos() {
+        try {
+          const r = await fetch('/api/medicos?limit=100');
+          const d = await r.json();
+          this.medicosList = d.data || [];
+        } catch (e) {
+          this.medicosList = [];
+        }
+      },
+
+      async loadVisitadores() {
+        try {
+          const r = await fetch('/api/visitadores?limit=100');
+          const d = await r.json();
+          this.visitadoresList = d.data || [];
+        } catch (e) {
+          this.visitadoresList = [];
+        }
+      },
+
+      async loadPage(page) {
+        this.loading = true;
+        try {
+          const params = new URLSearchParams();
+          params.set('page', String(page));
+          params.set('limit', String(this.pagination.limit));
+          if (this.filters.estado) params.set('estado', this.filters.estado);
+          var fi = window._fechaInicio || this.filters.fechaInicio;
+          var ff = window._fechaFin || this.filters.fechaFin;
+          if (fi) params.set('fechaInicio', fi);
+          if (ff) params.set('fechaFin', ff);
+
+          const r = await fetch(`/api/solicitudes?${params.toString()}`);
+          if (r.ok) {
+            const data = await r.json();
+            this.items = data.data || [];
+            this.pagination = data.pagination || { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false };
+          }
+        } catch (e) {
+          console.error('Load solicitudes error:', e);
+        }
+        this.loading = false;
+      },
+
+      aplicarFiltros() {
+        this.loadPage(1);
+      },
+
+      limpiarFiltros() {
+        this.filters = { estado: '', fechaInicio: '', fechaFin: '' };
+        window._fechaInicio = '';
+        window._fechaFin = '';
+        var input = document.getElementById('dateRange');
+        if (input) input.value = '';
+        this.loadPage(1);
+      },
+
+      openResolveModal(solicitud, action) {
+        this.resolveSolicitudData = solicitud;
+        this.resolveAction = action;
+        this.resolveComentario = '';
+        this.showResolveModal = true;
+      },
+
+      async resolveSolicitud() {
+        if (!this.resolveSolicitudData) return;
+        this.resolving = true;
+        try {
+          const r = await fetch('/api/solicitudes/resolver', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              solicitudId: this.resolveSolicitudData.id,
+              estado: this.resolveAction,
+              comentario: this.resolveComentario,
+            }),
+          });
+          if (r.ok) {
+            this.showResolveModal = false;
+            window.showToast(`Solicitud ${this.resolveAction} correctamente`, 'success');
+            await this.loadPage(this.pagination.page);
+          } else {
+            const err = await r.json();
+            window.showToast(err.error || 'Error al resolver solicitud', 'error');
+          }
+        } catch (e) {
+          window.showToast('Error al resolver solicitud', 'error');
+        }
+        this.resolving = false;
+      },
+
+      formatDate(date) {        if (!date) return '—';
+        return new Date(date).toLocaleDateString('es-MX', {
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit',
+        });
+      },
+
+      getPageNumbers() {
+        const pages = [];
+        const total = this.pagination.totalPages;
+        const current = this.pagination.page;
+        const start = Math.max(1, current - 2);
+        const end = Math.min(total, current + 2);
+        for (let i = start; i <= end; i++) pages.push(i);
+        return pages;
+      },
+    };
+  }
+</script>
+
+<script is:inline src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css" />
+<script is:inline src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
+<script is:inline>
+  function initDateRange() {
+    var input = document.getElementById('dateRange');
+    if (!input || typeof $ !== 'function' || typeof $(input).daterangepicker !== 'function') {
+      setTimeout(initDateRange, 300);
+      return;
+    }
+    var y = new Date().getFullYear();
+    $(input).daterangepicker({
+      autoApply: true,
+      minDate: moment(y + '-05-01', 'YYYY-MM-DD').toDate(),
+      maxDate: moment(y + '-09-20', 'YYYY-MM-DD').toDate(),
+      startDate: moment(y + '-05-01', 'YYYY-MM-DD').toDate(),
+      endDate: moment().isAfter(moment(y + '-09-20')) ? moment(y + '-09-20').toDate() : moment().toDate(),
+      ranges: {
+        'Hoy': [moment().toDate(), moment().toDate()],
+        'Últm. 7 Días': [moment().subtract(6, 'days').toDate(), moment().toDate()],
+        'Últm. 30 Días': [moment().subtract(29, 'days').toDate(), moment().toDate()],
+        'Este Mes': [moment().startOf('month').toDate(), moment().toDate()],
+        'Mes Anterior': [moment().subtract(1, 'month').startOf('month').toDate(), moment().subtract(1, 'month').endOf('month').toDate()],
+      },
+      showCustomRangeLabel: false,
+      alwaysShowCalendars: true,
+      opens: 'left',
+      locale: {
+        format: 'D MMM. YYYY',
+        separator: ' - ',
+        applyLabel: 'Aplicar',
+        cancelLabel: 'Cancelar',
+        fromLabel: 'Desde',
+        toLabel: 'Hasta',
+        customRangeLabel: 'Personalizado',
+        weekLabel: 'S',
+        daysOfWeek: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+        monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+        firstDay: 1
+      }
+    }, function(start, end) {
+      window._fechaInicio = start.format('YYYY-MM-DD');
+      window._fechaFin = end.format('YYYY-MM-DD');
+    });
+  }
+  setTimeout(initDateRange, 500);
+</script>
+
+<style is:global>
+  .toast-enter { animation: toastIn 0.3s ease-out; }
+  .toast-exit { animation: toastOut 0.3s ease-in forwards; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+
+  .daterangepicker {
+    font-family: 'Inter', sans-serif !important;
+    background: #1A1D24 !important;
+    border: 1px solid #333 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+    padding: 12px !important;
+  }
+  .daterangepicker:before, .daterangepicker:after { display: none !important; }
+  .daterangepicker .drp-calendar { max-width: 280px !important; }
+  .daterangepicker .calendar-table {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 8px !important;
+  }
+  .daterangepicker .calendar-table th {
+    color: #94a3b8 !important;
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    padding: 6px 4px !important;
+    text-transform: uppercase !important;
+  }
+  .daterangepicker .calendar-table th.month {
+    color: #E8E8E8 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-transform: none !important;
+  }
+  .daterangepicker .calendar-table th.next, .daterangepicker .calendar-table th.prev {
+    color: #94a3b8 !important;
+  }
+  .daterangepicker .calendar-table .next span, .daterangepicker .calendar-table .prev span {
+    border-color: #E8E8E8 !important;
+    border-width: 0 2px 2px 0 !important;
+    padding: 4px !important;
+  }
+  .daterangepicker td {
+    color: #E8E8E8 !important;
+    font-size: 13px !important;
+    padding: 5px !important;
+    border-radius: 8px !important;
+  }
+  .daterangepicker td.available:hover {
+    background: #2A2D35 !important;
+    cursor: pointer !important;
+  }
+  .daterangepicker td.in-range {
+    background: rgba(37, 99, 235, 0.25) !important;
+    border-radius: 0 !important;
+  }
+  .daterangepicker td.start-date, .daterangepicker td.end-date {
+    background: #2563eb !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+  }
+  .daterangepicker td.active {
+    background: #2563eb !important;
+    color: #fff !important;
+  }
+  .daterangepicker td.off, .daterangepicker td.off.in-range, .daterangepicker td.off.start-date, .daterangepicker td.off.end-date {
+    color: #555 !important;
+    background: transparent !important;
+  }
+  .daterangepicker td.disabled {
+    color: #444 !important;
+    cursor: not-allowed !important;
+  }
+  .daterangepicker .ranges {
+    padding: 0 8px 0 0 !important;
+  }
+  .daterangepicker .ranges ul { padding: 0 !important; margin: 0 !important; }
+  .daterangepicker .ranges li {
+    color: #E8E8E8 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 2px !important;
+    cursor: pointer !important;
+    transition: background 0.15s !important;
+  }
+  .daterangepicker .ranges li:hover { background: #2A2D35 !important; }
+  .daterangepicker .ranges li.active {
+    background: #2563eb !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+  }
+  .daterangepicker .drp-buttons {
+    border-top: 1px solid #333 !important;
+    padding: 10px 8px 4px !important;
+    display: none !important;
+  }
+  .daterangepicker select.monthselect, .daterangepicker select.yearselect {
+    background: #0F1117 !important;
+    color: #E8E8E8 !important;
+    border: 1px solid #333 !important;
+    border-radius: 6px !important;
+    padding: 2px 6px !important;
+    font-size: 12px !important;
+  }
+  .daterangepicker .calendar-time { color: #94a3b8 !important; }
+  .daterangepicker .calendar-time select {
+    background: #0F1117 !important;
+    color: #E8E8E8 !important;
+    border: 1px solid #333 !important;
+    border-radius: 4px !important;
+    padding: 2px !important;
+  }
+  #dateRange {
+    cursor: pointer;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    width: 16rem;
+  }
+  #dateRange::placeholder { color: var(--color-text-muted); }
+
+  .daterangepicker {
+    background-color: #1A1D24 !important;
+    color: #E8E8E8 !important;
+    border-color: #333 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5) !important;
+    font-family: 'Inter',sans-serif !important;
+    padding: 12px !important;
+  }
+  .daterangepicker:before, .daterangepicker:after { display: none !important; }
+  .daterangepicker .drp-calendar { max-width: 280px !important; }
+  .daterangepicker .calendar-table { background: transparent !important; border: none !important; border-radius: 8px !important; }
+  .daterangepicker .calendar-table th { color: #94a3b8 !important; font-weight: 500 !important; font-size: 12px !important; padding: 6px 4px !important; text-transform: uppercase !important; }
+  .daterangepicker .calendar-table th.month { color: #E8E8E8 !important; font-weight: 600 !important; font-size: 14px !important; text-transform: none !important; }
+  .daterangepicker .calendar-table th.next, .daterangepicker .calendar-table th.prev { color: #94a3b8 !important; }
+  .daterangepicker .calendar-table .next span, .daterangepicker .calendar-table .prev span { border-color: #E8E8E8 !important; border-width: 0 2px 2px 0 !important; padding: 4px !important; }
+  .daterangepicker td { color: #E8E8E8 !important; font-size: 13px !important; padding: 5px !important; border-radius: 8px !important; }
+  .daterangepicker td.available:hover { background: #2A2D35 !important; }
+  .daterangepicker td.in-range { background: rgba(37,99,235,.25) !important; border-radius: 0 !important; }
+  .daterangepicker td.start-date, .daterangepicker td.end-date { background: #2563eb !important; color: #fff !important; border-radius: 8px !important; font-weight: 600 !important; }
+  .daterangepicker td.active { background: #2563eb !important; color: #fff !important; }
+  .daterangepicker td.off, .daterangepicker td.off.in-range, .daterangepicker td.off.start-date, .daterangepicker td.off.end-date { color: #555 !important; background: transparent !important; }
+  .daterangepicker td.disabled { color: #444 !important; }
+  .daterangepicker .ranges { padding: 0 8px 0 0 !important; }
+  .daterangepicker .ranges ul { padding: 0 !important; margin: 0 !important; }
+  .daterangepicker .ranges li { color: #E8E8E8 !important; background: transparent !important; border: none !important; border-radius: 8px !important; font-size: 13px !important; padding: 8px 12px !important; margin-bottom: 2px !important; }
+  .daterangepicker .ranges li:hover { background: #2A2D35 !important; }
+  .daterangepicker .ranges li.active { background: #2563eb !important; color: #fff !important; font-weight: 500 !important; }
+  .daterangepicker .drp-buttons { border-top: 1px solid #333 !important; padding: 10px 8px 4px !important; display: none !important; }
+  .daterangepicker select.monthselect, .daterangepicker select.yearselect { background: #0F1117 !important; color: #E8E8E8 !important; border: 1px solid #333 !important; border-radius: 6px !important; padding: 2px 6px !important; font-size: 12px !important; }
+  .daterangepicker .calendar-time { color: #94a3b8 !important; }
+  .daterangepicker .calendar-time select { background: #0F1117 !important; color: #E8E8E8 !important; border: 1px solid #333 !important; border-radius: 4px !important; padding: 2px !important; }
+</style>

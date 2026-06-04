@@ -1,5 +1,5 @@
 import { db } from '../../../lib/db';
-import { productos, productoImagenes, moleculas } from '../../../lib/db/schema/index';
+import { productos, moleculas } from '../../../lib/db/schema/index';
 import { eq, like, and, or, count, desc, isNull, sql } from 'drizzle-orm';
 import { parseSearchParams, paginatedResponse, successResponse, errorResponse } from '../../../lib/utils/index';
 import { verifyToken } from '../../../lib/auth/index';

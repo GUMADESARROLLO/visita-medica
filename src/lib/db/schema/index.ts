@@ -226,7 +226,6 @@ export const solicitudesRelations = relations(solicitudes, ({ one, many }) => ({
   medico: one(medicos, { fields: [solicitudes.medicoId], references: [medicos.id] }),
   visitador: one(visitadores, { fields: [solicitudes.visitadorId], references: [visitadores.id] }),
   resueltoPorUsuario: one(usuarios, { fields: [solicitudes.resueltoPor], references: [usuarios.id] }),
-  historial: many(solicitudHistorial),
 }));
 
 export const solicitudHistorialRelations = relations(solicitudHistorial, ({ one }) => ({

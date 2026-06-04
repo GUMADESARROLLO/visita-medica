@@ -90,7 +90,7 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
     if (direccion !== undefined) updateData.direccion = direccion;
     if (telefono !== undefined) updateData.telefono = telefono;
     if (email !== undefined) updateData.email = email;
-    if (activo !== undefined) updateData.activo = activo;
+    if (activo !== undefined) updateData.activo = activo === true || activo === '1' ? '1' : '0';
 
     if (Object.keys(updateData).length === 0) {
       return errorResponse('No hay campos para actualizar', 400);
@@ -130,7 +130,7 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
 
     await db
       .update(medicos)
-      .set({ deletedAt: new Date().toISOString().slice(0, 19).replace('T', ' '), activo: '0' })
+      .set({ deletedAt: new Date(), activo: '0' })
       .where(eq(medicos.id, id));
 
     return successResponse({ id, message: 'Medico eliminado exitosamente' });

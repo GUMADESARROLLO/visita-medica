@@ -1,5 +1,5 @@
 ---
-import AdminLayout from '../layouts/AdminLayout.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
 
 <AdminLayout>
@@ -493,15 +493,22 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.load();
       },
 
-      openModal(item) {
+      async openModal(item) {
         this.editingId = item ? item.id : null;
         if (item) {
-          this.form.codigo = item.codigo || '';
-          this.form.nombre = item.nombre || '';
-          this.form.moleculaId = item.moleculaId || '';
-          this.form.descripcion = item.descripcion || '';
-          this.form.activo = item.activo === '1';
-          this.form.imagenes = (item.imagenes || []).map((img) => ({ id: img.id, url: img.url }));
+          let data = item;
+          if (this.editingId) {
+            try {
+              const r = await fetch(`/api/productos/${this.editingId}`);
+              if (r.ok) data = await r.json();
+            } catch(e) { /* use list data */ }
+          }
+          this.form.codigo = data.codigo || '';
+          this.form.nombre = data.nombre || '';
+          this.form.moleculaId = data.moleculaId || '';
+          this.form.descripcion = data.descripcion || '';
+          this.form.activo = data.activo === '1';
+          this.form.imagenes = (data.imagenes || []).map((img) => ({ id: img.id, url: img.url }));
         } else {
           this.form.codigo = '';
           this.form.nombre = '';

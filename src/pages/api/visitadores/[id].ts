@@ -2,7 +2,7 @@ import { db } from '../../../lib/db';
 import { visitadores, usuarios } from '../../../lib/db/schema/index';
 import { eq, and, ne } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
-import { verifyToken, hashPassword } from '../../../lib/auth/index';
+import { verifyToken } from '../../../lib/auth/index';
 import { successResponse, errorResponse } from '../../../lib/utils/index';
 
 export const GET: APIRoute = async ({ params, cookies }) => {
@@ -139,13 +139,13 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
 
     await db
       .update(visitadores)
-      .set({ deletedAt: new Date().toISOString().slice(0, 19).replace('T', ' '), activo: '0' })
+      .set({ deletedAt: new Date(), activo: '0' })
       .where(eq(visitadores.id, id));
 
     if (existing[0].usuarioId) {
       await db
         .update(usuarios)
-        .set({ activo: '0', deletedAt: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+        .set({ activo: '0', deletedAt: new Date() })
         .where(eq(usuarios.id, existing[0].usuarioId));
     }
 

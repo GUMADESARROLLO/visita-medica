@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { visitas, visitadores, medicos, especialidades } from '../../../lib/db/schema/index';
-import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { errorResponse } from '../../../lib/utils/index';
 import { verifyToken } from '../../../lib/auth/index';
 import ExcelJS from 'exceljs';

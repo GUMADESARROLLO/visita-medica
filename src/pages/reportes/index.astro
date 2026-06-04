@@ -1,5 +1,5 @@
 ---
-import AdminLayout from '../layouts/AdminLayout.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
 
 <AdminLayout>
@@ -12,66 +12,59 @@ import AdminLayout from '../layouts/AdminLayout.astro';
     </div>
 
     <!-- Advanced Filter Panel -->
-    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
-      <h3 class="font-medium mb-4 text-sm text-[var(--color-text-muted)] uppercase tracking-wider">Filtros</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-        <div>
-          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Fecha Inicio</label>
-          <input type="date" x-model="filters.fechaInicio" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+      <div class="flex flex-wrap items-end gap-2">
+        <div class="flex-1 min-w-[140px]">
+          <label class="block text-[10px] font-medium text-[var(--color-text-muted)] mb-1 uppercase">Rango</label>
+          <input type="text" id="dateRange" readonly class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-xs cursor-pointer" placeholder="Rango..." />
         </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Fecha Fin</label>
-          <input type="date" x-model="filters.fechaFin" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Visitador</label>
-          <select x-model="filters.visitadorId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+        <div class="flex-1 min-w-[120px]">
+          <label class="block text-[10px] font-medium text-[var(--color-text-muted)] mb-1 uppercase">Visitador</label>
+          <select x-model="filters.visitadorId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-xs">
             <option value="">Todos</option>
             <template x-for="v in visitadoresList" :key="v.id">
               <option :value="v.id" x-text="v.nombre"></option>
             </template>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Médico</label>
-          <select x-model="filters.medicoId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+        <div class="flex-1 min-w-[120px]">
+          <label class="block text-[10px] font-medium text-[var(--color-text-muted)] mb-1 uppercase">Médico</label>
+          <select x-model="filters.medicoId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-xs">
             <option value="">Todos</option>
             <template x-for="m in medicosList" :key="m.id">
               <option :value="m.id" x-text="m.nombre"></option>
             </template>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Especialidad</label>
-          <select x-model="filters.especialidadId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+        <div class="flex-1 min-w-[120px]">
+          <label class="block text-[10px] font-medium text-[var(--color-text-muted)] mb-1 uppercase">Especialidad</label>
+          <select x-model="filters.especialidadId" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-xs">
             <option value="">Todas</option>
             <template x-for="e in especialidadesList" :key="e.id">
               <option :value="e.id" x-text="e.nombre"></option>
             </template>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Efectiva</label>
-          <select x-model="filters.efectiva" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+        <div class="flex-1 min-w-[90px]">
+          <label class="block text-[10px] font-medium text-[var(--color-text-muted)] mb-1 uppercase">Efectiva</label>
+          <select x-model="filters.efectiva" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-xs">
             <option value="">Todas</option>
             <option value="1">Sí</option>
             <option value="0">No</option>
           </select>
         </div>
-      </div>
-      <div class="flex items-center gap-3 mt-4">
-        <button @click="loadPage(1)" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          Aplicar filtros
-        </button>
-        <button @click="exportExcel()" :disabled="exporting" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-60">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          <span x-show="!exporting">Exportar Excel</span>
-          <span x-show="exporting">Exportando...</span>
-        </button>
-        <button @click="clearFilters()" class="px-4 py-2 border border-[var(--color-border)] rounded-lg text-sm hover:bg-[var(--color-surface-alt)] transition-colors">
-          Limpiar
-        </button>
+        <div>
+          <label class="block text-[10px] font-medium text-[var(--color-text-muted)] mb-1 uppercase invisible">_</label>
+          <button @click="loadPage(1)" class="px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap">Aplicar</button>
+        </div>
+        <div>
+          <label class="block text-[10px] font-medium text-[var(--color-text-muted)] mb-1 uppercase invisible">_</label>
+          <button @click="exportExcel()" :disabled="exporting" class="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-60 whitespace-nowrap" x-text="exporting ? 'Exportando...' : 'Exportar'"></button>
+        </div>
+        <div>
+          <label class="block text-[10px] font-medium text-[var(--color-text-muted)] mb-1 uppercase invisible">_</label>
+          <button @click="clearFilters()" class="px-3 py-2 border border-[var(--color-border)] rounded-lg text-xs hover:bg-[var(--color-surface-alt)] transition-colors whitespace-nowrap">Limpiar</button>
+        </div>
       </div>
     </div>
 
@@ -218,8 +211,8 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           const params = new URLSearchParams();
           params.set('page', String(page));
           params.set('limit', String(this.pagination.limit));
-          if (this.filters.fechaInicio) params.set('fechaInicio', this.filters.fechaInicio);
-          if (this.filters.fechaFin) params.set('fechaFin', this.filters.fechaFin);
+          if ((window._fechaInicio || this.filters.fechaInicio)) params.set('fechaInicio', (window._fechaInicio || this.filters.fechaInicio));
+          if ((window._fechaFin || this.filters.fechaFin)) params.set('fechaFin', (window._fechaFin || this.filters.fechaFin));
           if (this.filters.visitadorId) params.set('visitadorId', this.filters.visitadorId);
           if (this.filters.medicoId) params.set('medicoId', this.filters.medicoId);
           if (this.filters.especialidadId) params.set('especialidadId', this.filters.especialidadId);
@@ -242,8 +235,8 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.exporting = true;
         try {
           const params = new URLSearchParams();
-          if (this.filters.fechaInicio) params.set('fechaInicio', this.filters.fechaInicio);
-          if (this.filters.fechaFin) params.set('fechaFin', this.filters.fechaFin);
+          if ((window._fechaInicio || this.filters.fechaInicio)) params.set('fechaInicio', (window._fechaInicio || this.filters.fechaInicio));
+          if ((window._fechaFin || this.filters.fechaFin)) params.set('fechaFin', (window._fechaFin || this.filters.fechaFin));
           if (this.filters.visitadorId) params.set('visitadorId', this.filters.visitadorId);
           if (this.filters.medicoId) params.set('medicoId', this.filters.medicoId);
           if (this.filters.especialidadId) params.set('especialidadId', this.filters.especialidadId);
@@ -281,6 +274,10 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           especialidadId: '',
           efectiva: '',
         };
+        window._fechaInicio = '';
+        window._fechaFin = '';
+        var input = document.getElementById('dateRange');
+        if (input) input.value = '';
         this.loadPage(1);
       },
 
@@ -303,9 +300,62 @@ import AdminLayout from '../layouts/AdminLayout.astro';
   }
 </script>
 
-<style>
+<script is:inline src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css" />
+<script is:inline src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
+<script is:inline>
+  function initDateRange() {
+    var input = document.getElementById('dateRange');
+    if (!input || typeof $ !== 'function' || typeof $(input).daterangepicker !== 'function') {
+      setTimeout(initDateRange, 300);
+      return;
+    }
+    $(input).daterangepicker({
+      autoApply: true,
+      showCustomRangeLabel: false,
+      alwaysShowCalendars: true,
+      opens: 'left',
+      locale: {
+        format: 'D MMM. YYYY',
+        separator: ' - ',
+        applyLabel: 'Aplicar',
+        cancelLabel: 'Cancelar',
+        fromLabel: 'Desde',
+        toLabel: 'Hasta',
+        customRangeLabel: 'Personalizado',
+        weekLabel: 'S',
+        daysOfWeek: ['Dom','Lun','Mar','Mie','Jue','Vie','Sab'],
+        monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+        firstDay: 1
+      }
+    }, function(start, end) {
+      window._fechaInicio = start.format('YYYY-MM-DD');
+      window._fechaFin = end.format('YYYY-MM-DD');
+    });
+  }
+  setTimeout(initDateRange, 500);
+</script>
+
+<style is:global>
   .toast-enter { animation: toastIn 0.3s ease-out; }
   .toast-exit { animation: toastOut 0.3s ease-in forwards; }
   @keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
   @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+
+  .daterangepicker { background-color: #1A1D24 !important; color: #E8E8E8 !important; border-color: #333 !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0,0,0,.5) !important; font-family: 'Inter',sans-serif !important; padding: 12px !important; }
+  .daterangepicker:before, .daterangepicker:after { display: none !important; }
+  .daterangepicker .calendar-table { background: transparent !important; border: none !important; }
+  .daterangepicker .calendar-table th { color: #94a3b8 !important; }
+  .daterangepicker .calendar-table th.month { color: #E8E8E8 !important; font-weight: 600 !important; }
+  .daterangepicker .calendar-table .next span, .daterangepicker .calendar-table .prev span { border-color: #E8E8E8 !important; }
+  .daterangepicker td { color: #E8E8E8 !important; border-radius: 8px !important; }
+  .daterangepicker td.available:hover { background: #2A2D35 !important; }
+  .daterangepicker td.in-range { background: rgba(37,99,235,.25) !important; }
+  .daterangepicker td.start-date, .daterangepicker td.end-date, .daterangepicker td.active { background: #2563eb !important; color: #fff !important; }
+  .daterangepicker td.off { color: #555 !important; background: transparent !important; }
+  .daterangepicker .ranges li { color: #E8E8E8 !important; background: transparent !important; border: none !important; border-radius: 8px !important; }
+  .daterangepicker .ranges li:hover { background: #2A2D35 !important; }
+  .daterangepicker .ranges li.active { background: #2563eb !important; color: #fff !important; }
+  .daterangepicker .drp-buttons { border-top-color: #333 !important; display: none !important; }
 </style>

@@ -1,6 +1,6 @@
 import { db } from '../../../../lib/db';
 import { medicos, medicoProductos, productos } from '../../../../lib/db/schema/index';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { verifyToken } from '../../../../lib/auth/index';
 import { successResponse, errorResponse } from '../../../../lib/utils/index';
@@ -27,23 +27,30 @@ export const GET: APIRoute = async ({ params, cookies }) => {
 
     const result = await db
       .select({
-        medicoId: medicoProductos.medicoId,
-        productoId: medicoProductos.productoId,
-        createdAt: medicoProductos.createdAt,
-        producto: productos,
+        id: productos.id,
+        codigo: productos.codigo,
+        nombre: productos.nombre,
+        imagenUrl: sql<string | null>`(SELECT pi.url FROM producto_imagenes pi WHERE pi.producto_id = productos.id ORDER BY pi.orden ASC, pi.id ASC LIMIT 1)`,
       })
       .from(medicoProductos)
       .innerJoin(productos, eq(medicoProductos.productoId, productos.id))
       .where(eq(medicoProductos.medicoId, medicoId));
 
+    const asignadosIds = new Set(result.map(r => r.id));
+
     const allProductos = await db
-      .select()
+      .select({
+        id: productos.id,
+        codigo: productos.codigo,
+        nombre: productos.nombre,
+        imagenUrl: sql<string | null>`(SELECT pi.url FROM producto_imagenes pi WHERE pi.producto_id = productos.id ORDER BY pi.orden ASC, pi.id ASC LIMIT 1)`,
+      })
       .from(productos)
-      .where(eq(productos.activo, '1'));
+      .where(and(eq(productos.activo, '1'), isNull(productos.deletedAt)));
 
     return successResponse({
       asignados: result,
-      disponibles: allProductos,
+      disponibles: allProductos.filter(p => !asignadosIds.has(p.id)),
     });
   } catch (err) {
     console.error('Medico productos get error:', err);
