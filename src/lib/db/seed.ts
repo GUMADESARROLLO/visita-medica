@@ -84,23 +84,6 @@ async function seed() {
   }
   console.log('  Moleculas seeded.');
 
-  // Medios seed
-  const { medios } = await import('./schema/index');
-  const mediosData = [
-    { nombre: 'Medicina Clara', telefono: '555-0101', email: 'contacto@medicinaclara.com' },
-    { nombre: 'Revista Salud Hoy', telefono: '555-0102', email: 'info@saludhoy.com' },
-    { nombre: 'Portal Médico', telefono: '555-0103', email: 'admin@portalmedico.com' },
-    { nombre: 'Guía Farmacéutica', telefono: '555-0104', email: 'contacto@guiafarma.com' },
-    { nombre: 'Red Médica Digital', telefono: '555-0105', email: 'info@redmedica.com' },
-  ];
-  for (const m of mediosData) {
-    const existing = await db.select().from(medios).where(eq(medios.nombre, m.nombre));
-    if (existing.length === 0) {
-      await db.insert(medios).values({ ...m, activo: '1' });
-    }
-  }
-  console.log('  Medios seeded.');
-
   console.log('Seed complete.');
   process.exit(0);
 }

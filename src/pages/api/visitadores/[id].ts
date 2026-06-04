@@ -27,12 +27,10 @@ export const GET: APIRoute = async ({ params, cookies }) => {
         deletedAt: visitadores.deletedAt,
         createdAt: visitadores.createdAt,
         updatedAt: visitadores.updatedAt,
-        usuario: {
-          id: usuarios.id,
-          username: usuarios.username,
-          email: usuarios.email,
-          activo: usuarios.activo,
-        },
+        usuarioId_: usuarios.id,
+        usuarioUsername: usuarios.username,
+        usuarioEmail: usuarios.email,
+        usuarioActivo: usuarios.activo,
       })
       .from(visitadores)
       .leftJoin(usuarios, eq(visitadores.usuarioId, usuarios.id))
@@ -43,7 +41,18 @@ export const GET: APIRoute = async ({ params, cookies }) => {
       return errorResponse('Visitador no encontrado', 404);
     }
 
-    return successResponse(result[0]);
+    const mapped = {
+      ...result[0],
+      usuario: result[0].usuarioId_
+        ? { id: result[0].usuarioId_, username: result[0].usuarioUsername, email: result[0].usuarioEmail, activo: result[0].usuarioActivo }
+        : null,
+      usuarioId_: undefined,
+      usuarioUsername: undefined,
+      usuarioEmail: undefined,
+      usuarioActivo: undefined,
+    };
+
+    return successResponse(mapped);
   } catch (err) {
     console.error('Visitador get error:', err);
     return errorResponse('Error al obtener visitador', 500);
@@ -130,13 +139,13 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
 
     await db
       .update(visitadores)
-      .set({ deletedAt: new Date(), activo: '0' })
+      .set({ deletedAt: new Date().toISOString().slice(0, 19).replace('T', ' '), activo: '0' })
       .where(eq(visitadores.id, id));
 
     if (existing[0].usuarioId) {
       await db
         .update(usuarios)
-        .set({ activo: '0', deletedAt: new Date() })
+        .set({ activo: '0', deletedAt: new Date().toISOString().slice(0, 19).replace('T', ' ') })
         .where(eq(usuarios.id, existing[0].usuarioId));
     }
 

@@ -158,10 +158,10 @@ import AdminLayout from '../layouts/AdminLayout.astro';
   </div>
 </AdminLayout>
 
-<script>
-  function reportesPage() {
+<script is:inline>
+  window.reportesPage = function() {
     return {
-      items: [] as any[],
+      items: [],
       loading: false,
       exporting: false,
       pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
@@ -175,9 +175,9 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         efectiva: '',
       },
 
-      visitadoresList: [] as any[],
-      medicosList: [] as any[],
-      especialidadesList: [] as any[],
+      visitadoresList: [],
+      medicosList: [],
+      especialidadesList: [],
 
       async init() {
         await Promise.all([
@@ -212,7 +212,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         } catch (e) { this.especialidadesList = []; }
       },
 
-      async loadPage(page: number) {
+      async loadPage(page) {
         this.loading = true;
         try {
           const params = new URLSearchParams();
@@ -284,15 +284,14 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.loadPage(1);
       },
 
-      formatDate(date: string | null) {
-        if (!date) return '—';
+      formatDate(date) {        if (!date) return '—';
         return new Date(date).toLocaleDateString('es-MX', {
           year: 'numeric', month: '2-digit', day: '2-digit',
         });
       },
 
-      getPageNumbers(): number[] {
-        const pages: number[] = [];
+      getPageNumbers() {
+        const pages = [];
         const total = this.pagination.totalPages;
         const current = this.pagination.page;
         const start = Math.max(1, current - 2);

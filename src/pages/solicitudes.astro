@@ -227,7 +227,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             <p class="text-sm text-[var(--color-text-muted)] text-center py-8">Cargando historial...</p>
           </template>
           <template x-if="!historialLoading && historialEntries.length === 0">
-            <p class="text-sm text-[var(--color-text-muted)] text-center py-8">Sin entradas en el historial</p>
+            <p class="text-sm text-[var(--color-text-muted)] text-center py-8">Sin entradn el historial</p>
           </template>
           <div class="space-y-3">
             <template x-for="h in historialEntries" :key="h.id">
@@ -265,32 +265,32 @@ import AdminLayout from '../layouts/AdminLayout.astro';
   </div>
 </AdminLayout>
 
-<script>
-  function solicitudesPage() {
+<script is:inline>
+  window.solicitudesPage = function() {
     return {
-      items: [] as any[],
+      items: [],
       loading: false,
       pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
       filters: { estado: '', fechaInicio: '', fechaFin: '' },
 
-      tipos: [] as any[],
-      medicosList: [] as any[],
-      visitadoresList: [] as any[],
+      tipos: [],
+      medicosList: [],
+      visitadoresList: [],
 
       showCreateModal: false,
       creating: false,
       createForm: { tipoId: '', medicoId: '', visitadorId: '', observacion: '' },
 
       showResolveModal: false,
-      resolveAction: '' as string,
-      resolveSolicitudData: null as any,
+      resolveAction: '',
+      resolveSolicitudData: null,
       resolveComentario: '',
       resolving: false,
 
       showHistorialModal: false,
       historialLoading: false,
-      historialData: null as any,
-      historialEntries: [] as any[],
+      historialData: null,
+      historialEntries: [],
 
       async init() {
         await Promise.all([this.loadTipos(), this.loadMedicos(), this.loadVisitadores()]);
@@ -324,7 +324,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         }
       },
 
-      async loadPage(page: number) {
+      async loadPage(page) {
         this.loading = true;
         try {
           const params = new URLSearchParams();
@@ -341,8 +341,8 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             this.pagination = data.pagination || { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false };
             // Also extract tipos from the first response if needed
             if (!this.tipos.length && this.items.length) {
-              const seen = new Set<string>();
-              const tiposList: any[] = [];
+              const seen = new Set();
+              const tiposList = [];
               for (const item of this.items) {
                 if (item.tipo && !seen.has(String(item.tipo.id))) {
                   seen.add(String(item.tipo.id));
@@ -391,7 +391,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.creating = false;
       },
 
-      openResolveModal(solicitud: any, action: string) {
+      openResolveModal(solicitud, action) {
         this.resolveSolicitudData = solicitud;
         this.resolveAction = action;
         this.resolveComentario = '';
@@ -425,7 +425,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.resolving = false;
       },
 
-      async viewHistorial(solicitud: any) {
+      async viewHistorial(solicitud) {
         this.historialData = solicitud;
         this.historialEntries = [];
         this.historialLoading = true;
@@ -442,16 +442,15 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.historialLoading = false;
       },
 
-      formatDate(date: string | null) {
-        if (!date) return '—';
+      formatDate(date) {        if (!date) return '—';
         return new Date(date).toLocaleDateString('es-MX', {
           year: 'numeric', month: '2-digit', day: '2-digit',
           hour: '2-digit', minute: '2-digit',
         });
       },
 
-      getPageNumbers(): number[] {
-        const pages: number[] = [];
+      getPageNumbers() {
+        const pages = [];
         const total = this.pagination.totalPages;
         const current = this.pagination.page;
         const start = Math.max(1, current - 2);

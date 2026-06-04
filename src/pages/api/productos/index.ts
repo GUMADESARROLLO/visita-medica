@@ -46,10 +46,8 @@ export const GET: APIRoute = async ({ cookies, request }) => {
         deletedAt: productos.deletedAt,
         createdAt: productos.createdAt,
         updatedAt: productos.updatedAt,
-        molecula: {
-          id: moleculas.id,
-          nombre: moleculas.nombre,
-        },
+        moleculaNombre: moleculas.nombre,
+        imagenUrl: sql<string | null>`(SELECT pi.url FROM producto_imagenes pi WHERE pi.producto_id = ${productos.id} ORDER BY pi.orden ASC, pi.id ASC LIMIT 1)`,
       })
       .from(productos)
       .leftJoin(moleculas, eq(productos.moleculaId, moleculas.id))
@@ -58,8 +56,15 @@ export const GET: APIRoute = async ({ cookies, request }) => {
       .limit(limit)
       .offset(offset);
 
+    const mapped = data.map(r => ({
+      ...r,
+      molecula: r.moleculaNombre ? { nombre: r.moleculaNombre } : null,
+      moleculaNombre: undefined,
+      imagenUrl: r.imagenUrl || null,
+    }));
+
     return successResponse(
-      paginatedResponse(data, total?.count ?? 0, page, limit),
+      paginatedResponse(mapped, total?.count ?? 0, page, limit),
     );
   } catch (err) {
     console.error('Productos GET error:', err);
@@ -103,16 +108,17 @@ export const POST: APIRoute = async ({ cookies, request }) => {
         deletedAt: productos.deletedAt,
         createdAt: productos.createdAt,
         updatedAt: productos.updatedAt,
-        molecula: {
-          id: moleculas.id,
-          nombre: moleculas.nombre,
-        },
+        moleculaNombre: moleculas.nombre,
       })
       .from(productos)
       .leftJoin(moleculas, eq(productos.moleculaId, moleculas.id))
       .where(eq(productos.id, Number(created.insertId)));
 
-    return successResponse(record, 201);
+    return successResponse({
+      ...record,
+      molecula: record?.moleculaNombre ? { nombre: record.moleculaNombre } : null,
+      moleculaNombre: undefined,
+    }, 201);
   } catch (err: any) {
     console.error('Productos POST error:', err);
     if (err?.code === 'ER_DUP_ENTRY') {

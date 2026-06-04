@@ -1,5 +1,5 @@
 import { db } from '../../../lib/db';
-import { usuarios, especialidades, medicos, visitadores, productos, solicitudes, visitas, medios } from '../../../lib/db/schema/index';
+import { especialidades, medicos, visitadores, productos, solicitudes, visitas } from '../../../lib/db/schema/index';
 import { count, eq, and, gte, lte, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { verifyToken } from '../../../lib/auth/index';
@@ -21,7 +21,6 @@ export const GET: APIRoute = async ({ cookies }) => {
       totalVisitadores,
       totalProductos,
       totalEspecialidades,
-      totalMedios,
       totalSolicitudesPendientes,
       visitasMes,
       visitasEfectivasMes,
@@ -30,7 +29,6 @@ export const GET: APIRoute = async ({ cookies }) => {
       db.select({ count: count() }).from(visitadores).where(eq(visitadores.activo, '1')),
       db.select({ count: count() }).from(productos).where(eq(productos.activo, '1')),
       db.select({ count: count() }).from(especialidades).where(eq(especialidades.activo, '1')),
-      db.select({ count: count() }).from(medios).where(eq(medios.activo, '1')),
       db.select({ count: count() }).from(solicitudes).where(eq(solicitudes.estado, 'pendiente')),
       db.select({ count: count() })
         .from(visitas)
@@ -98,7 +96,6 @@ export const GET: APIRoute = async ({ cookies }) => {
         visitadores: totalVisitadores[0]?.count ?? 0,
         productos: totalProductos[0]?.count ?? 0,
         especialidades: totalEspecialidades[0]?.count ?? 0,
-        medios: totalMedios[0]?.count ?? 0,
         solicitudesPendientes: totalSolicitudesPendientes[0]?.count ?? 0,
       },
       visitas: {

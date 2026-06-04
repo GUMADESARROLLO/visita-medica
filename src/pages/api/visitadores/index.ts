@@ -49,12 +49,9 @@ export const GET: APIRoute = async ({ request, cookies }) => {
           deletedAt: visitadores.deletedAt,
           createdAt: visitadores.createdAt,
           updatedAt: visitadores.updatedAt,
-          usuario: {
-            id: usuarios.id,
-            username: usuarios.username,
-            email: usuarios.email,
-            activo: usuarios.activo,
-          },
+          usuarioUsername: usuarios.username,
+          usuarioEmail: usuarios.email,
+          usuarioActivo: usuarios.activo,
         })
         .from(visitadores)
         .leftJoin(usuarios, eq(visitadores.usuarioId, usuarios.id))
@@ -65,7 +62,14 @@ export const GET: APIRoute = async ({ request, cookies }) => {
       db.select({ count: count() }).from(visitadores).where(whereClause),
     ]);
 
-    return successResponse(paginatedResponse(items, totalResult[0]?.count ?? 0, page, limit));
+    const mapped = items.map(r => ({
+      ...r,
+      usuario: r.usuarioId ? { username: r.usuarioUsername, email: r.usuarioEmail, activo: r.usuarioActivo } : null,
+      usuarioUsername: undefined,
+      usuarioEmail: undefined,
+      usuarioActivo: undefined,
+    }));
+    return successResponse(paginatedResponse(mapped, totalResult[0]?.count ?? 0, page, limit));
   } catch (err) {
     console.error('Visitadores list error:', err);
     return errorResponse('Error al obtener visitadores', 500);
@@ -101,29 +105,29 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return errorResponse('El codigo ya existe', 400);
     }
 
-    let usuarioId: number | null = null;
+    let usuarioId = null;
 
     if (createUser && email) {
-      const visitadorRole = await db
+      const [visitadorRole] = await db
         .select({ id: roles.id })
         .from(roles)
         .where(eq(roles.nombre, 'Visitador'))
         .limit(1);
 
-      if (visitadorRole.length > 0) {
+      if (visitadorRole) {
         const username = email.split('@')[0];
         const tempPassword = `Visita${Date.now().toString().slice(-6)}`;
 
-        const userResult = await db.insert(usuarios).values({
+        const [userResult] = await db.insert(usuarios).values({
           nombre,
           username,
           email,
           password: await hashPassword(tempPassword),
-          rolId: visitadorRole[0].id,
+          rolId: visitadorRole.id,
           activo: '1',
         });
 
-        usuarioId = Number(userResult[0].insertId);
+        usuarioId = Number(userResult.insertId);
       }
     }
 

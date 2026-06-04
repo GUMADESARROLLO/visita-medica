@@ -107,7 +107,7 @@ export const DELETE: APIRoute = async ({ cookies, params }) => {
 
     await db
       .update(especialidades)
-      .set({ deletedAt: new Date() })
+      .set({ deletedAt: new Date().toISOString().slice(0, 19).replace('T', ' ') })
       .where(eq(especialidades.id, id));
 
     return successResponse({ message: 'Especialidad eliminada correctamente' });

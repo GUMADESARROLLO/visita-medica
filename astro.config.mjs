@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   output: 'server',
   adapter: node({ mode: 'standalone' }),
+  session: { driver: 'memory' },
   vite: {
     plugins: [tailwindcss()],
   },

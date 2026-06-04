@@ -6,7 +6,7 @@ export const roles = mysqlTable('roles', {
   nombre: varchar('nombre', { length: 50 }).notNull().unique(),
   descripcion: varchar('descripcion', { length: 255 }),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const usuarios = mysqlTable('usuarios', {
@@ -20,7 +20,7 @@ export const usuarios = mysqlTable('usuarios', {
   ultimoAcceso: datetime('ultimo_acceso'),
   deletedAt: datetime('deleted_at'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index('idx_usuarios_rol').on(table.rolId),
   index('idx_usuarios_activo').on(table.activo),
@@ -33,21 +33,10 @@ export const especialidades = mysqlTable('especialidades', {
   activo: mysqlEnum('activo', ['0', '1']).default('1').notNull(),
   deletedAt: datetime('deleted_at'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const medios = mysqlTable('medios', {
-  id: int('id').autoincrement().primaryKey(),
-  nombre: varchar('nombre', { length: 150 }).notNull(),
-  telefono: varchar('telefono', { length: 20 }),
-  email: varchar('email', { length: 150 }),
-  direccion: varchar('direccion', { length: 300 }),
-  contacto: varchar('contacto', { length: 150 }),
-  activo: mysqlEnum('activo', ['0', '1']).default('1').notNull(),
-  deletedAt: datetime('deleted_at'),
-  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
-});
+
 
 export const moleculas = mysqlTable('moleculas', {
   id: int('id').autoincrement().primaryKey(),
@@ -56,7 +45,7 @@ export const moleculas = mysqlTable('moleculas', {
   activo: mysqlEnum('activo', ['0', '1']).default('1').notNull(),
   deletedAt: datetime('deleted_at'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const productos = mysqlTable('productos', {
@@ -68,7 +57,7 @@ export const productos = mysqlTable('productos', {
   activo: mysqlEnum('activo', ['0', '1']).default('1').notNull(),
   deletedAt: datetime('deleted_at'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index('idx_productos_molecula').on(table.moleculaId),
 ]);
@@ -94,18 +83,10 @@ export const medicos = mysqlTable('medicos', {
   activo: mysqlEnum('activo', ['0', '1']).default('1').notNull(),
   deletedAt: datetime('deleted_at'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index('idx_medicos_especialidad').on(table.especialidadId),
   index('idx_medicos_activo').on(table.activo),
-]);
-
-export const medicoMedios = mysqlTable('medico_medios', {
-  medicoId: int('medico_id').notNull().references(() => medicos.id, { onDelete: 'cascade' }),
-  medioId: int('medio_id').notNull().references(() => medios.id, { onDelete: 'cascade' }),
-  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-}, (table) => [
-  primaryKey({ columns: [table.medicoId, table.medioId] }),
 ]);
 
 export const medicoProductos = mysqlTable('medico_productos', {
@@ -126,7 +107,7 @@ export const visitadores = mysqlTable('visitadores', {
   activo: mysqlEnum('activo', ['0', '1']).default('1').notNull(),
   deletedAt: datetime('deleted_at'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index('idx_visitadores_usuario').on(table.usuarioId),
 ]);
@@ -147,7 +128,7 @@ export const solicitudes = mysqlTable('solicitudes', {
   resueltoPor: int('resuelto_por').references(() => usuarios.id),
   fechaResolucion: datetime('fecha_resolucion'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index('idx_solicitudes_tipo').on(table.tipoId),
   index('idx_solicitudes_estado').on(table.estado),
@@ -176,7 +157,7 @@ export const visitas = mysqlTable('visitas', {
   latitud: decimal('latitud', { precision: 10, scale: 8 }),
   longitud: decimal('longitud', { precision: 11, scale: 8 }),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index('idx_visitas_fecha').on(table.fecha),
   index('idx_visitas_visitador').on(table.visitadorId),
@@ -222,32 +203,6 @@ export const rolesRelations = relations(roles, ({ many }) => ({
 
 export const especialidadesRelations = relations(especialidades, ({ many }) => ({
   medicos: many(medicos),
-}));
-
-export const medicosRelations = relations(medicos, ({ one, many }) => ({
-  especialidad: one(especialidades, { fields: [medicos.especialidadId], references: [especialidades.id] }),
-  medicoMedios: many(medicoMedios),
-  medicoProductos: many(medicoProductos),
-  visitas: many(visitas),
-  solicitudes: many(solicitudes),
-}));
-
-export const medicoMediosRelations = relations(medicoMedios, ({ one }) => ({
-  medico: one(medicos, { fields: [medicoMedios.medicoId], references: [medicos.id] }),
-  medio: one(medios, { fields: [medicoMedios.medioId], references: [medios.id] }),
-}));
-
-export const medicoProductosRelations = relations(medicoProductos, ({ one }) => ({
-  medico: one(medicos, { fields: [medicoProductos.medicoId], references: [medicos.id] }),
-  producto: one(productos, { fields: [medicoProductos.productoId], references: [productos.id] }),
-}));
-
-export const mediosRelations = relations(medios, ({ many }) => ({
-  medicoMedios: many(medicoMedios),
-}));
-
-export const moleculasRelations = relations(moleculas, ({ many }) => ({
-  productos: many(productos),
 }));
 
 export const productosRelations = relations(productos, ({ one, many }) => ({

@@ -89,11 +89,6 @@ import AdminLayout from '../layouts/AdminLayout.astro';
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center justify-end gap-1">
-                    <template x-if="!item.usuarioId">
-                      <button @click="createUserAccount(item.id)" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500 hover:bg-green-600 text-white transition-colors" title="Crear usuario">
-                        Crear Usuario
-                      </button>
-                    </template>
                     <button @click="openModal(item)" class="p-2 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors" title="Editar">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
@@ -174,20 +169,12 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             </div>
           </div>
           <div>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" x-model="formData.activo" true-value="1" false-value="0" class="w-4 h-4 rounded border-[var(--color-border)]" />
-              <span class="text-sm">Activo</span>
-            </label>
+            <label class="block text-sm font-medium mb-1.5">Estado</label>
+            <select x-model="formData.activo" class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] w-full">
+              <option value="1">Activo</option>
+              <option value="0">Inactivo</option>
+            </select>
           </div>
-          <template x-if="!editingId">
-            <div>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="formData.createUser" class="w-4 h-4 rounded border-[var(--color-border)]" />
-                <span class="text-sm">Crear cuenta de usuario</span>
-              </label>
-              <p class="text-xs text-[var(--color-text-muted)] mt-1 ml-6">Crea un usuario con rol Visitador para acceso al sistema</p>
-            </div>
-          </template>
           <div class="flex justify-end gap-3 pt-2">
             <button type="button" @click="closeModal()" class="px-4 py-2.5 rounded-xl text-sm border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors">Cancelar</button>
             <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors" x-text="editingId ? 'Actualizar' : 'Crear'"></button>
@@ -198,25 +185,24 @@ import AdminLayout from '../layouts/AdminLayout.astro';
   </div>
 </AdminLayout>
 
-<script>
-  function visitadoresPage() {
+<script is:inline>
+  window.visitadoresPage = function() {
     return {
-      items: [] as any[],
+      items: [],
       pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
       loading: true,
       searchQuery: '',
-      searchTimer: null as any,
+      searchTimer: null,
       filterActivo: '',
 
       showModal: false,
-      editingId: null as number | null,
+      editingId: null,
       formData: {
         codigo: '',
         nombre: '',
         email: '',
         telefono: '',
         activo: '1',
-        createUser: false,
       },
 
       async load() {
@@ -244,13 +230,13 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.searchTimer = setTimeout(() => { this.pagination.page = 1; this.load(); }, 300);
       },
 
-      changePage(page: number) {
+      changePage(page) {
         if (page < 1 || page > this.pagination.totalPages) return;
         this.pagination.page = page;
         this.load();
       },
 
-      openModal(item: any = null) {
+      openModal(item = null) {
         if (item) {
           this.editingId = item.id;
           this.formData = {
@@ -259,11 +245,10 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             email: item.email || '',
             telefono: item.telefono || '',
             activo: item.activo || '1',
-            createUser: false,
-          };
+            };
         } else {
           this.editingId = null;
-          this.formData = { codigo: '', nombre: '', email: '', telefono: '', activo: '1', createUser: false };
+          this.formData = { codigo: '', nombre: '', email: '', telefono: '', activo: '1' };
         }
         this.showModal = true;
       },
@@ -271,7 +256,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       closeModal() {
         this.showModal = false;
         this.editingId = null;
-        this.formData = { codigo: '', nombre: '', email: '', telefono: '', activo: '1', createUser: false };
+        this.formData = { codigo: '', nombre: '', email: '', telefono: '', activo: '1' };
       },
 
       async save() {
@@ -295,51 +280,19 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           }
           this.closeModal();
           this.load();
-        } catch (e: any) {
+        } catch (e) {
           window.showToast(e.message, 'error');
         }
       },
 
-      async deleteItem(id: number) {
+      async deleteItem(id) {
         if (!confirm('Estas seguro de eliminar este visitador?')) return;
         try {
           const r = await fetch(`/api/visitadores/${id}`, { method: 'DELETE' });
           if (!r.ok) throw new Error('Error al eliminar');
           window.showToast('Visitador eliminado exitosamente');
           this.load();
-        } catch (e: any) {
-          window.showToast(e.message, 'error');
-        }
-      },
-
-      async createUserAccount(id: number) {
-        if (!confirm('Crear cuenta de usuario para este visitador?')) return;
-        try {
-          const r = await fetch(`/api/visitadores/${id}`);
-          if (!r.ok) throw new Error('Error al obtener visitador');
-          const v = await r.json();
-
-          const createR = await fetch('/api/visitadores', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              codigo: v.codigo,
-              nombre: v.nombre,
-              email: v.email,
-              telefono: v.telefono,
-              activo: v.activo,
-              createUser: true,
-            }),
-          });
-
-          if (!createR.ok) {
-            const err = await createR.json();
-            throw new Error(err.error || 'Error al crear usuario');
-          }
-
-          window.showToast('Cuenta de usuario creada exitosamente');
-          this.load();
-        } catch (e: any) {
+        } catch (e) {
           window.showToast(e.message, 'error');
         }
       },

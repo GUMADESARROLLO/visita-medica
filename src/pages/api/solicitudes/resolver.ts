@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { solicitudes, solicitudHistorial } from '../../../lib/db/schema/index';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { successResponse, errorResponse } from '../../../lib/utils/index';
 import { verifyToken } from '../../../lib/auth/index';
 import type { APIRoute } from 'astro';
@@ -42,13 +42,11 @@ export const POST: APIRoute = async ({ cookies, request }) => {
       return errorResponse('La solicitud ya fue resuelta', 400);
     }
 
-    const now = new Date();
-
     await db.update(solicitudes)
       .set({
         estado,
         resueltoPor: user!.id,
-        fechaResolucion: now,
+        fechaResolucion: new Date().toISOString().slice(0, 19).replace('T', ' '),
       })
       .where(eq(solicitudes.id, solicitudId));
 

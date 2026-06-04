@@ -249,19 +249,19 @@ import AdminLayout from '../layouts/AdminLayout.astro';
   </div>
 </AdminLayout>
 
-<script>
-  function especialidadesPage() {
+<script is:inline>
+  window.especialidadesPage = function() {
     return {
-      items: [] as any[],
+      items: [],
       pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
       loading: true,
       saving: false,
       deleting: false,
       search: '',
       filters: { activo: '' },
-      editingId: null as number | null,
+      editingId: null,
       modal: { open: false },
-      deleteModal: { open: false, itemId: null as number | null, itemName: '' },
+      deleteModal: { open: false, itemId: null, itemName: '' },
       formData: {
         nombre: '',
         descripcion: '',
@@ -283,21 +283,21 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           const data = await res.json();
           this.items = data.data || [];
           this.pagination = data.pagination || this.pagination;
-        } catch (err) {
-          window.showToast('Error al cargar las especialidades', 'error');
+        } catch (e) {
+          window.showToast('Error al cargar lspecialidades', 'error');
         } finally {
           this.loading = false;
         }
       },
 
-      goToPage(page: number) {
+      goToPage(page) {
         if (page < 1 || page > this.pagination.totalPages) return;
         this.pagination.page = page;
         this.load();
       },
 
       pageNumbers() {
-        const pages: number[] = [];
+        const pages = [];
         const { page, totalPages } = this.pagination;
         const start = Math.max(1, page - 2);
         const end = Math.min(totalPages, page + 2);
@@ -311,7 +311,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.modal.open = true;
       },
 
-      edit(item: any) {
+      edit(item) {
         this.editingId = item.id;
         this.formData = {
           nombre: item.nombre || '',
@@ -348,14 +348,14 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           window.showToast(this.editingId ? 'Especialidad actualizada correctamente' : 'Especialidad creada correctamente');
           this.closeModal();
           this.load();
-        } catch (err: any) {
+        } catch (e) {
           window.showToast(err.message || 'Error al guardar', 'error');
         } finally {
           this.saving = false;
         }
       },
 
-      confirmDelete(id: number, name: string) {
+      confirmDelete(id, name) {
         this.deleteModal = { open: true, itemId: id, itemName: name };
       },
 
@@ -371,7 +371,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           window.showToast('Especialidad eliminada correctamente');
           this.deleteModal.open = false;
           this.load();
-        } catch (err: any) {
+        } catch (e) {
           window.showToast(err.message || 'Error al eliminar', 'error');
         } finally {
           this.deleting = false;

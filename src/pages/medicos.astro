@@ -34,7 +34,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         @change="load()"
         class="border border-[var(--color-border)] rounded-xl px-4 py-2.5 bg-[var(--color-surface)] text-sm"
       >
-        <option value="">Todas las especialidades</option>
+        <option value="">Todas lspecialidades</option>
         <template x-for="e in especialidadesData" :key="e.id">
           <option :value="e.id" x-text="e.nombre"></option>
         </template>
@@ -260,20 +260,20 @@ import AdminLayout from '../layouts/AdminLayout.astro';
   </div>
 </AdminLayout>
 
-<script>
-  function medicosPage() {
+<script is:inline>
+  window.medicosPage = function() {
     return {
-      items: [] as any[],
+      items: [],
       pagination: { total: 0, page: 1, limit: 25, totalPages: 0, hasMore: false },
       loading: true,
       searchQuery: '',
-      searchTimer: null as any,
+      searchTimer: null,
       filterEspecialidadId: '',
       filterActivo: '',
-      especialidadesData: [] as any[],
+      especialidadesData: [],
 
       showModal: false,
-      editingId: null as number | null,
+      editingId: null,
       formData: {
         codigo: '',
         nombre: '',
@@ -285,9 +285,9 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       },
 
       showProductosModal: false,
-      productosMedico: null as any,
-      productosDisponibles: [] as any[],
-      selectedProductos: [] as number[],
+      productosMedico: null,
+      productosDisponibles: [],
+      selectedProductos: [],
       productosLoading: false,
 
       async load() {
@@ -317,13 +317,13 @@ import AdminLayout from '../layouts/AdminLayout.astro';
         this.searchTimer = setTimeout(() => { this.pagination.page = 1; this.load(); }, 300);
       },
 
-      changePage(page: number) {
+      changePage(page) {
         if (page < 1 || page > this.pagination.totalPages) return;
         this.pagination.page = page;
         this.load();
       },
 
-      openModal(item: any = null) {
+      openModal(item = null) {
         if (item) {
           this.editingId = item.id;
           this.formData = {
@@ -364,24 +364,24 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           window.showToast(this.editingId ? 'Medico actualizado exitosamente' : 'Medico creado exitosamente');
           this.closeModal();
           this.load();
-        } catch (e: any) {
+        } catch (e) {
           window.showToast(e.message, 'error');
         }
       },
 
-      async deleteItem(id: number) {
+      async deleteItem(id) {
         if (!confirm('Estas seguro de eliminar este medico?')) return;
         try {
           const r = await fetch(`/api/medicos/${id}`, { method: 'DELETE' });
           if (!r.ok) throw new Error('Error al eliminar');
           window.showToast('Medico eliminado exitosamente');
           this.load();
-        } catch (e: any) {
+        } catch (e) {
           window.showToast(e.message, 'error');
         }
       },
 
-      async openProductosModal(medico: any) {
+      async openProductosModal(medico) {
         this.productosMedico = medico;
         this.productosLoading = true;
         this.showProductosModal = true;
@@ -389,7 +389,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           const r = await fetch(`/api/medicos/productos/${medico.id}`);
           const data = await r.json();
           this.productosDisponibles = data.disponibles || [];
-          this.selectedProductos = (data.asignados || []).map((a: any) => a.productoId);
+          this.selectedProductos = (data.asignados || []).map((a) => a.productoId);
         } catch (e) {
           window.showToast('Error al cargar productos', 'error');
         }
@@ -413,7 +413,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           if (!r.ok) throw new Error('Error al guardar productos');
           window.showToast('Productos asignados exitosamente');
           this.closeProductosModal();
-        } catch (e: any) {
+        } catch (e) {
           window.showToast(e.message, 'error');
         }
       },

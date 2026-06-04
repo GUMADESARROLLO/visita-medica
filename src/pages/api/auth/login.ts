@@ -1,9 +1,19 @@
-import { db } from '../../../lib/db';
-import { usuarios, roles, sesiones } from '../../../lib/db/schema/index';
+import mysql from 'mysql2/promise';
 import { comparePassword, createToken } from '../../../lib/auth/index';
-import { eq } from 'drizzle-orm';
 import { errorResponse, successResponse } from '../../../lib/utils/index';
 import type { APIRoute } from 'astro';
+import 'dotenv/config';
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'visitamedica',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -13,20 +23,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return errorResponse('Usuario y contraseña requeridos', 400);
     }
 
-    const [user] = await db
-      .select({
-        id: usuarios.id,
-        username: usuarios.username,
-        password: usuarios.password,
-        nombre: usuarios.nombre,
-        activo: usuarios.activo,
-        rolId: usuarios.rolId,
-        rolNombre: roles.nombre,
-      })
-      .from(usuarios)
-      .innerJoin(roles, eq(usuarios.rolId, roles.id))
-      .where(eq(usuarios.username, username))
-      .limit(1);
+    const [rows] = await pool.execute(
+      `SELECT u.id, u.username, u.password, u.nombre, u.activo, u.rol_id as rolId, r.nombre as rolNombre
+       FROM usuarios u
+       INNER JOIN roles r ON r.id = u.rol_id
+       WHERE u.username = ? AND u.deleted_at IS NULL
+       LIMIT 1`,
+      [username]
+    ) as [any[], any];
+
+    const user = rows[0];
 
     if (!user || user.activo === '0') {
       return errorResponse('Credenciales inválidas', 401);
@@ -52,7 +58,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       maxAge: 60 * 60 * 8,
     });
 
-    await db.update(usuarios).set({ ultimoAcceso: new Date() }).where(eq(usuarios.id, user.id));
+    await pool.execute(
+      `UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?`,
+      [user.id]
+    );
 
     return successResponse({
       token,
@@ -63,8 +72,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         rol: user.rolNombre,
       },
     });
-  } catch (err) {
-    console.error('Login error:', err);
+  } catch (err: any) {
+    console.error('Login error:', err.message, err.code);
     return errorResponse('Error del servidor', 500);
   }
 };

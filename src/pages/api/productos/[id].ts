@@ -28,10 +28,7 @@ export const GET: APIRoute = async ({ cookies, params }) => {
         deletedAt: productos.deletedAt,
         createdAt: productos.createdAt,
         updatedAt: productos.updatedAt,
-        molecula: {
-          id: moleculas.id,
-          nombre: moleculas.nombre,
-        },
+        moleculaNombre: moleculas.nombre,
       })
       .from(productos)
       .leftJoin(moleculas, eq(productos.moleculaId, moleculas.id))
@@ -47,7 +44,12 @@ export const GET: APIRoute = async ({ cookies, params }) => {
       .where(eq(productoImagenes.productoId, id))
       .orderBy(productoImagenes.orden);
 
-    return successResponse({ ...record, imagenes });
+    return successResponse({
+      ...record,
+      molecula: record.moleculaNombre ? { nombre: record.moleculaNombre } : null,
+      moleculaNombre: undefined,
+      imagenes,
+    });
   } catch (err) {
     console.error('Productos [id] GET error:', err);
     return errorResponse('Error al obtener producto', 500);
@@ -107,10 +109,7 @@ export const PUT: APIRoute = async ({ cookies, params, request }) => {
         deletedAt: productos.deletedAt,
         createdAt: productos.createdAt,
         updatedAt: productos.updatedAt,
-        molecula: {
-          id: moleculas.id,
-          nombre: moleculas.nombre,
-        },
+        moleculaNombre: moleculas.nombre,
       })
       .from(productos)
       .leftJoin(moleculas, eq(productos.moleculaId, moleculas.id))
@@ -122,7 +121,12 @@ export const PUT: APIRoute = async ({ cookies, params, request }) => {
       .where(eq(productoImagenes.productoId, id))
       .orderBy(productoImagenes.orden);
 
-    return successResponse({ ...updated, imagenes });
+    return successResponse({
+      ...updated,
+      molecula: updated?.moleculaNombre ? { nombre: updated.moleculaNombre } : null,
+      moleculaNombre: undefined,
+      imagenes,
+    });
   } catch (err: any) {
     console.error('Productos [id] PUT error:', err);
     if (err?.code === 'ER_DUP_ENTRY') {
@@ -155,7 +159,7 @@ export const DELETE: APIRoute = async ({ cookies, params }) => {
 
     await db
       .update(productos)
-      .set({ deletedAt: new Date() })
+      .set({ deletedAt: new Date().toISOString().slice(0, 19).replace('T', ' ') })
       .where(eq(productos.id, id));
 
     return successResponse({ message: 'Producto eliminado correctamente' });

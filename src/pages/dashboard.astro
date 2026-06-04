@@ -13,7 +13,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
     </div>
 
     <!-- KPIs -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 card-hover">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
@@ -72,19 +72,6 @@ import AdminLayout from '../layouts/AdminLayout.astro';
             <p class="text-xl font-bold" x-text="data?.counts?.solicitudesPendientes || 0">0</p>
           </div>
         </div>
-      </div>
-
-      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 card-hover">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
-          </div>
-          <div>
-            <p class="text-xs text-[var(--color-text-muted)]">Medios</p>
-            <p class="text-xl font-bold" x-text="data?.counts?.medios || 0">0</p>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Visitas KPIs -->
@@ -165,10 +152,10 @@ import AdminLayout from '../layouts/AdminLayout.astro';
   document.getElementById('current-date')!.textContent = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 </script>
 
-<script>
-  function dashboard() {
+<script is:inline>
+  window.dashboard = function() {
     return {
-      data: null as any,
+      data: null,
       async load() {
         try {
           const r = await fetch('/api/dashboard');
@@ -178,16 +165,16 @@ import AdminLayout from '../layouts/AdminLayout.astro';
       },
       renderCharts() {
         const { visitasPorDia, solicitudesPorDia } = this.data?.charts || {};
-        const days: string[] = [];
-        const totals: number[] = [];
-        const efectivas: number[] = [];
+        const days = [];
+        const totals = [];
+        const efectivas = [];
         for (const d of (visitasPorDia || [])) {
           days.push(d.fecha.slice(5));
           totals.push(Number(d.total));
           efectivas.push(Number(d.efectivas));
         }
 
-        const canvas1 = document.getElementById('visitasChart') as HTMLCanvasElement;
+        const canvas1 = document.getElementById('visitasChart');
         if (canvas1) {
           import('chart.js/auto').then(({ default: Chart }) => {
             new Chart(canvas1, {
@@ -204,14 +191,14 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           });
         }
 
-        const solDays: string[] = [];
-        const solTotals: number[] = [];
+        const solDays = [];
+        const solTotals = [];
         for (const d of (solicitudesPorDia || [])) {
           solDays.push(d.fecha.slice(5));
           solTotals.push(Number(d.total));
         }
 
-        const canvas2 = document.getElementById('solicitudesChart') as HTMLCanvasElement;
+        const canvas2 = document.getElementById('solicitudesChart');
         if (canvas2) {
           import('chart.js/auto').then(({ default: Chart }) => {
             new Chart(canvas2, {
@@ -227,7 +214,7 @@ import AdminLayout from '../layouts/AdminLayout.astro';
           });
         }
       },
-      $nextTick(fn: () => void) {
+      $nextTick(fn) {
         requestAnimationFrame(() => requestAnimationFrame(fn));
       },
     };
