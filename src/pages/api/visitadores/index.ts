@@ -6,7 +6,8 @@ import { verifyToken, hashPassword } from '../../../lib/auth/index';
 import { successResponse, errorResponse, parseSearchParams, paginatedResponse } from '../../../lib/utils/index';
 
 export const GET: APIRoute = async ({ request, cookies }) => {
-  const token = cookies.get('token')?.value;
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || cookies.get('token')?.value;
   if (!token || !(await verifyToken(token))) {
     return errorResponse('No autorizado', 401);
   }
@@ -77,7 +78,8 @@ export const GET: APIRoute = async ({ request, cookies }) => {
 };
 
 export const POST: APIRoute = async ({ request, cookies }) => {
-  const token = cookies.get('token')?.value;
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || cookies.get('token')?.value;
   if (!token || !(await verifyToken(token))) {
     return errorResponse('No autorizado', 401);
   }

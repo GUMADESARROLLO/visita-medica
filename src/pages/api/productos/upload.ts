@@ -16,7 +16,8 @@ const ALLOWED_TYPES = [
 ];
 
 export const POST: APIRoute = async ({ cookies, request }) => {
-  const token = cookies.get('token')?.value;
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || cookies.get('token')?.value;
   if (!token || !(await verifyToken(token))) {
     return errorResponse('No autorizado', 401);
   }

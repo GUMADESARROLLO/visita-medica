@@ -5,8 +5,9 @@ import type { APIRoute } from 'astro';
 import { verifyToken } from '../../../lib/auth/index';
 import { successResponse, errorResponse } from '../../../lib/utils/index';
 
-export const GET: APIRoute = async ({ params, cookies }) => {
-  const token = cookies.get('token')?.value;
+export const GET: APIRoute = async ({ request, params, cookies }) => {
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || cookies.get('token')?.value;
   if (!token || !(await verifyToken(token))) {
     return errorResponse('No autorizado', 401);
   }
@@ -49,7 +50,8 @@ export const GET: APIRoute = async ({ params, cookies }) => {
 };
 
 export const PUT: APIRoute = async ({ params, request, cookies }) => {
-  const token = cookies.get('token')?.value;
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || cookies.get('token')?.value;
   if (!token || !(await verifyToken(token))) {
     return errorResponse('No autorizado', 401);
   }
@@ -108,8 +110,9 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ params, cookies }) => {
-  const token = cookies.get('token')?.value;
+export const DELETE: APIRoute = async ({ request, params, cookies }) => {
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || cookies.get('token')?.value;
   if (!token || !(await verifyToken(token))) {
     return errorResponse('No autorizado', 401);
   }

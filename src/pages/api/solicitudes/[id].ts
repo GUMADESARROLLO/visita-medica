@@ -5,8 +5,9 @@ import { verifyToken } from '../../../lib/auth/index';
 import { successResponse, errorResponse } from '../../../lib/utils/index';
 import type { APIRoute } from 'astro';
 
-export const GET: APIRoute = async ({ cookies, params }) => {
-  const token = cookies.get('token')?.value;
+export const GET: APIRoute = async ({ request, cookies, params }) => {
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || cookies.get('token')?.value;
   if (!token || !(await verifyToken(token))) {
     return errorResponse('No autorizado', 401);
   }
@@ -62,7 +63,8 @@ export const GET: APIRoute = async ({ cookies, params }) => {
 };
 
 export const PUT: APIRoute = async ({ cookies, params, request }) => {
-  const token = cookies.get('token')?.value;
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || cookies.get('token')?.value;
   if (!token || !(await verifyToken(token))) {
     return errorResponse('No autorizado', 401);
   }

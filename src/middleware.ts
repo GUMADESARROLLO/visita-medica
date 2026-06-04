@@ -14,7 +14,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
-  const token = context.cookies.get('token')?.value;
+  const authHeader = context.request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '') || context.cookies.get('token')?.value;
 
   if (!token) {
     if (pathname === '/' || pathname.startsWith('/api/')) {
