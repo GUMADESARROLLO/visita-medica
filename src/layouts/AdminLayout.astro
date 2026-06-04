@@ -122,11 +122,9 @@ const filteredNav = user?.rol === 'Administrador'
                 <p class="text-sm font-medium">{user.username}</p>
                 <p class="text-xs text-[var(--color-text-muted)]">{user.rol}</p>
               </div>
-              <form method="POST" action="/api/auth/logout">
-                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-danger hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                  Cerrar sesión
-                </button>
-              </form>
+              <button @click="logout()" class="w-full text-left px-4 py-2 text-sm text-danger hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                Cerrar sesión
+              </button>
             </div>
           </div>
         ) : null}
@@ -173,6 +171,11 @@ const filteredNav = user?.rol === 'Administrador'
 
       window.alertMsg = function(title, message, icon) {
         Swal.fire({ title: title || '', text: message || '', icon: icon || 'success', confirmButtonColor: '#2563eb' });
+      };
+
+      window.logout = async function() {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
       };
     })();
   </script>
